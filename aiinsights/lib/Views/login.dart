@@ -1,13 +1,10 @@
-import 'signup.dart';
+import 'dart:convert';
+import 'package:aiinsights/backend_call/backend_service.dart';
 import 'package:flutter/material.dart';
-import '../Components/button.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../Components/colors.dart';
-import '../Components/textfield.dart';
-import '../JSON/users.dart';
-import 'profile.dart';
-import 'package:aiinsights/Views/apphome.dart'; // import Apphome here
-
-import '../SQLite/database_helper.dart';
+import 'signup.dart';
+import 'package:aiinsights/Views/apphome.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,33 +19,43 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool isChecked = false;
   bool isLoginTrue = false;
+  bool _obscurePassword = true;
 
-  bool _obscurePassword = true; // controls password visibility
+  final BackendService _backendService = BackendService();
 
-  final db = DatabaseHelper();
+  void login() async {
+    final email = emailController.text.trim().toLowerCase();
+    final password = passwordController.text;
 
-  login() async {
-    Users? usrDetails = await db.getUser(
-      emailController.text.trim().toLowerCase(),
-    );
-
-    bool res = await db.authenticate(
-      Users(
-        email: emailController.text.trim().toLowerCase(),
-        password: passwordController.text,
-      ),
-    );
-
-    if (res) {
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => Apphome(profile: usrDetails)),
+    try {
+      final response = await _backendService.loginUser(
+        email: email,
+        password: password,
       );
-    } else {
+
+      if (response['success']) {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('userId', response['userId'].toString());
+
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            // Remove profile parameter here
+            builder: (context) => const Apphome(),
+          ),
+        );
+      } else {
+        setState(() {
+          isLoginTrue = true;
+        });
+      }
+    } catch (e) {
       setState(() {
         isLoginTrue = true;
       });
+      print("Login error: $e");
     }
   }
 
@@ -60,10 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background Image
           Image.asset("assets/background.jpg", fit: BoxFit.cover),
-
-          // Dark gradient overlay for contrast
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -76,8 +80,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-
-          // Login Form Card centered
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
@@ -119,7 +121,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 30),
 
-                    // Email input with icon inside
                     TextField(
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
@@ -143,7 +144,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Password input with eye toggle button
                     TextField(
                       controller: passwordController,
                       obscureText: _obscurePassword,
@@ -177,7 +177,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 10),
 
-                    // Remember me row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
@@ -201,7 +200,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Login button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -228,7 +226,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Signup prompt
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -257,10 +254,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 10),
 
-                    // Error message with fade-in
                     AnimatedOpacity(
                       opacity: isLoginTrue ? 1 : 0,
                       duration: const Duration(milliseconds: 350),

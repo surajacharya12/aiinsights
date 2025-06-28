@@ -6,8 +6,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../JSON/users.dart';
-import '../SQLite/database_helper.dart';
 import '../Components/colors.dart';
+import '../backend_call/backend_service.dart';
 
 class EditProfile extends StatefulWidget {
   final Users user;
@@ -20,20 +20,16 @@ class EditProfile extends StatefulWidget {
 class _EditProfileState extends State<EditProfile> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
-  late TextEditingController _passwordController;
 
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
-  final DatabaseHelper dbHelper = DatabaseHelper();
-
-  bool _obscurePassword = true; // <-- added
+  final BackendService backendService = BackendService();
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.user.fullName ?? '');
-    _emailController = TextEditingController(text: widget.user.email ?? '');
-    _passwordController = TextEditingController(text: widget.user.password);
+    _nameController = TextEditingController(text: widget.user.name);
+    _emailController = TextEditingController(text: widget.user.email);
     if (widget.user.photo != null && widget.user.photo!.isNotEmpty) {
       _imageFile = File(widget.user.photo!);
     }
@@ -68,28 +64,51 @@ class _EditProfileState extends State<EditProfile> {
   Future<void> _saveProfile() async {
     String name = _nameController.text.trim();
     String email = _emailController.text.trim();
-    String password = _passwordController.text.trim();
 
-    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+    if (name.isEmpty || email.isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
       return;
     }
 
-    Users updatedUser = Users(
-      usrId: widget.user.usrId,
-      fullName: name,
-      email: email,
-      password: password,
-      photo: _imageFile?.path ?? widget.user.photo,
-    );
-
     try {
-      await dbHelper.updateUser(updatedUser);
+      // If image changed, upload it first
+      Map<String, dynamic>? photoResult;
+      String? newPhoto = widget.user.photo;
+      if (_imageFile != null && _imageFile!.path != (widget.user.photo ?? '')) {
+        photoResult = await backendService.uploadUserPhoto(
+          userId: widget.user.id,
+          imageFile: _imageFile!,
+        );
+        if (photoResult['success'] != true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(photoResult['message'] ?? 'Photo upload failed'),
+            ),
+          );
+          return;
+        }
+        newPhoto = photoResult['user']?['photo'] ?? newPhoto;
+      }
 
-      // Return updated user to previous screen
-      Navigator.of(context).pop(updatedUser);
+      // Update user profile in backend
+      final updateResult = await backendService.updateUserProfile(
+        userId: widget.user.id,
+        name: name,
+        email: email,
+        photo: newPhoto,
+      );
+
+      if (updateResult['success'] == true) {
+        Navigator.of(context).pop(updateResult['user']);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(updateResult['message'] ?? 'Failed to save profile'),
+          ),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -101,7 +120,6 @@ class _EditProfileState extends State<EditProfile> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -174,24 +192,6 @@ class _EditProfileState extends State<EditProfile> {
               controller: _emailController,
               decoration: const InputDecoration(labelText: 'Email'),
               keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _passwordController,
-              obscureText: _obscurePassword, // <-- here
-              decoration: InputDecoration(
-                labelText: 'Password',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obscurePassword = !_obscurePassword;
-                    });
-                  },
-                ),
-              ),
             ),
             const SizedBox(height: 40),
             SizedBox(

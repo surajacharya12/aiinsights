@@ -1,13 +1,8 @@
-import 'AppHome.dart';
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
-import '../SQLite/database_helper.dart';
-import '../JSON/users.dart';
 
 class ChatbotScreen extends StatefulWidget {
-  final Users profile;
-
-  const ChatbotScreen({super.key, required this.profile});
+  const ChatbotScreen({super.key});
 
   @override
   State<ChatbotScreen> createState() => _ChatbotScreenState();
@@ -149,12 +144,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => Apphome(profile: widget.profile),
-                ),
-              );
+              Navigator.pop(context); // Just pop current screen (back)
             },
           ),
           const SizedBox(width: 8),

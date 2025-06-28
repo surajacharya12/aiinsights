@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import '../Components/button.dart';
 import '../Components/colors.dart';
 import '../Components/textfield.dart';
-import '../JSON/users.dart';
 import 'login.dart';
-import '../SQLite/database_helper.dart';
+import 'package:aiinsights/backend_call/backend_service.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -18,9 +16,10 @@ class _SignupScreenState extends State<SignupScreen> {
   final email = TextEditingController();
   final password = TextEditingController();
   final confirmPassword = TextEditingController();
-  final db = DatabaseHelper();
 
-  signUp() async {
+  final _backendService = BackendService();
+
+  void signUp() async {
     if (password.text != confirmPassword.text) {
       ScaffoldMessenger.of(
         context,
@@ -28,19 +27,43 @@ class _SignupScreenState extends State<SignupScreen> {
       return;
     }
 
-    var res = await db.createUser(
-      Users(
-        fullName: fullName.text.trim(),
+    try {
+      final response = await _backendService.registerUser(
+        name: fullName.text.trim(),
         email: email.text.trim().toLowerCase(),
-        password: password.text,
-      ),
-    );
+        password: password.text, // Send plain password
+      );
 
-    if (res > 0) {
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      if (response['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Registration successful"),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        Future.delayed(const Duration(seconds: 2), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
+        });
+
+        fullName.clear();
+        email.clear();
+        password.clear();
+        confirmPassword.clear();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error: ${response['message']}"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Exception: $e"), backgroundColor: Colors.red),
       );
     }
   }
@@ -53,10 +76,7 @@ class _SignupScreenState extends State<SignupScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background image
           Image.asset("assets/background.jpg", fit: BoxFit.cover),
-
-          // Dark overlay for readability
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -69,7 +89,6 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
             ),
           ),
-
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
@@ -110,21 +129,18 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                     ),
                     const SizedBox(height: 30),
-
                     InputField(
                       hint: "Full Name",
                       icon: Icons.person,
                       controller: fullName,
                     ),
                     const SizedBox(height: 16),
-
                     InputField(
                       hint: "Email",
                       icon: Icons.email,
                       controller: email,
                     ),
                     const SizedBox(height: 16),
-
                     InputField(
                       hint: "Password",
                       icon: Icons.lock,
@@ -132,7 +148,6 @@ class _SignupScreenState extends State<SignupScreen> {
                       passwordInvisible: true,
                     ),
                     const SizedBox(height: 16),
-
                     InputField(
                       hint: "Confirm Password",
                       icon: Icons.lock,
@@ -140,7 +155,6 @@ class _SignupScreenState extends State<SignupScreen> {
                       passwordInvisible: true,
                     ),
                     const SizedBox(height: 24),
-
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -165,9 +179,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

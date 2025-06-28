@@ -1,32 +1,126 @@
 import 'dart:io';
+import 'package:aiinsights/backend_call/backend_service.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:aiinsights/Views/dashboard.dart';
 import 'package:aiinsights/Views/explore.dart';
 import 'package:aiinsights/widgets/AiTools.dart';
-
 import 'package:aiinsights/widgets/appfooter.dart';
 import 'package:aiinsights/widgets/createcourse.dart';
 import 'package:aiinsights/widgets/input_form.dart';
 import 'package:aiinsights/widgets/mainpage.dart';
-import 'package:flutter/material.dart';
-import 'package:aiinsights/Views/profile.dart';
 import 'package:aiinsights/Views/login.dart';
-import 'package:aiinsights/JSON/users.dart';
+
+// Import your BackendService class
 
 class Apphome extends StatefulWidget {
-  final Users? profile;
-
-  const Apphome({super.key, this.profile});
+  const Apphome({super.key});
 
   @override
   State<Apphome> createState() => _ApphomeState();
 }
 
 class _ApphomeState extends State<Apphome> {
+  // User info variables fetched from backend
+  String? fullName;
+  String? email;
+  String? photoUrl;
+  bool isLoading = true;
+  int? userId;
+
+  final BackendService backendService = BackendService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    setState(() => isLoading = true);
+
+    final prefs = await SharedPreferences.getInstance();
+    final userIdStr = prefs.getString('userId');
+    if (userIdStr == null) {
+      setState(() {
+        userId = null;
+        fullName = "Guest User";
+        email = null;
+        photoUrl = null;
+        isLoading = false;
+      });
+      return;
+    }
+    try {
+      final result = await backendService.getUserProfile(userId: userIdStr);
+      if (result['success'] == true && result['user'] != null) {
+        final user = result['user'];
+        String? photo = user['photo'];
+        // Fix: avoid double slash in photo URL
+        if (photo != null && photo.isNotEmpty && !photo.startsWith('http')) {
+          if (photo.startsWith('/')) {
+            photo = "${backendService.baseUrl}" + photo;
+          } else {
+            photo = "${backendService.baseUrl}/" + photo;
+          }
+        }
+        setState(() {
+          userId = user['id'];
+          fullName = user['name'] ?? "User";
+          email = user['email'];
+          photoUrl = photo;
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          userId = null;
+          fullName = "Unknown User";
+          email = null;
+          photoUrl = null;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        userId = null;
+        fullName = "Unknown User";
+        email = null;
+        photoUrl = null;
+        isLoading = false;
+      });
+    }
+  }
+
+  // Utility to handle profile image safely
+  ImageProvider getProfileImage() {
+    if (photoUrl != null && photoUrl!.isNotEmpty) {
+      if (photoUrl!.startsWith("http")) {
+        return NetworkImage(photoUrl!);
+      } else {
+        try {
+          final file = File(photoUrl!);
+          if (file.existsSync()) return FileImage(file);
+        } catch (_) {}
+      }
+    }
+    return const AssetImage("assets/no_user.jpg");
+  }
+
+  // Logout logic
+  Future<void> handleLogout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final String? photoPath = widget.profile?.photo;
-    final bool hasPhoto = photoPath != null && photoPath.isNotEmpty;
-
     return Scaffold(
       drawer: Drawer(
         child: ListView(
@@ -36,33 +130,35 @@ class _ApphomeState extends State<Apphome> {
               decoration: const BoxDecoration(color: Colors.deepPurpleAccent),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.white,
-                backgroundImage: hasPhoto
-                    ? FileImage(File(photoPath!))
-                    : const AssetImage("assets/no_user.jpg") as ImageProvider,
+                backgroundImage: getProfileImage(),
               ),
-              accountName: Text(
-                widget.profile?.fullName ?? "Guest User",
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              accountEmail: Text(
-                widget.profile?.email ?? "No email",
-                style: const TextStyle(fontSize: 14),
-              ),
+              accountName: isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : Text(
+                      fullName ?? "Guest User",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+              accountEmail: isLoading
+                  ? null
+                  : Text(
+                      email ?? "No email",
+                      style: const TextStyle(fontSize: 14),
+                    ),
             ),
+
             ListTile(
               leading: const Icon(Icons.add, color: Colors.teal),
               title: const Text("Create Course"),
               onTap: () {
-                final userEmail = widget.profile?.email;
-                if (userEmail != null && userEmail.isNotEmpty) {
+                if (email != null && email!.isNotEmpty) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                          CreateCourse(userEmail: userEmail.trim()),
+                          CreateCourse(userEmail: email!.trim()),
                     ),
                   );
                 } else {
@@ -76,6 +172,7 @@ class _ApphomeState extends State<Apphome> {
                 }
               },
             ),
+
             ListTile(
               leading: const Icon(Icons.dashboard, color: Colors.blueAccent),
               title: const Text("Dashboard"),
@@ -86,6 +183,7 @@ class _ApphomeState extends State<Apphome> {
                 );
               },
             ),
+
             ListTile(
               leading: const Icon(Icons.explore, color: Colors.green),
               title: const Text("Explore"),
@@ -96,18 +194,23 @@ class _ApphomeState extends State<Apphome> {
                 );
               },
             ),
+
             ListTile(
               leading: const Icon(Icons.quiz, color: Colors.orange),
               title: const Text("Quiz"),
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => InputScreen(
-                      profile: widget.profile!,
-                    ), // <-- pass profile here
-                  ),
-                );
+                if (email != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => InputScreen(profile: null),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Please log in again.")),
+                  );
+                }
               },
             ),
 
@@ -121,7 +224,9 @@ class _ApphomeState extends State<Apphome> {
                 );
               },
             ),
+
             const Divider(),
+
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.redAccent),
               title: const Text(
@@ -147,14 +252,8 @@ class _ApphomeState extends State<Apphome> {
                           foregroundColor: Colors.white,
                         ),
                         onPressed: () {
-                          Navigator.of(context).pop(); // close dialog
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LoginScreen(),
-                            ),
-                            (route) => false,
-                          );
+                          Navigator.of(context).pop();
+                          handleLogout();
                         },
                       ),
                     ],
@@ -182,7 +281,6 @@ class _ApphomeState extends State<Apphome> {
               color: Color.fromARGB(255, 21, 4, 4),
             ),
             iconSize: 30,
-            color: Colors.white,
             splashColor: Colors.white,
             tooltip: 'Settings',
             onPressed: () {
@@ -198,11 +296,18 @@ class _ApphomeState extends State<Apphome> {
         children: [
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(top: 60),
-              child: Column(children: const [Mainpage()]),
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 16,
+              ),
+              child: const Mainpage(),
             ),
           ),
-          Appfooter(profile: widget.profile),
+          Appfooter(
+            userId: userId,
+            fullName: fullName,
+            email: email,
+            photoUrl: photoUrl,
+          ),
         ],
       ),
     );

@@ -1,147 +1,188 @@
 import 'dart:io';
 
 import '../Components/colors.dart';
+import '../JSON/users.dart';
+import '../widgets/EditProfile.dart';
 import 'package:flutter/material.dart';
 
-import '../JSON/users.dart';
-import '../SQLite/database_helper.dart';
-import '../widgets/EditProfile.dart'; // Import the edit screen
-
 class Profile extends StatefulWidget {
-  final Users? profile;
-  const Profile({super.key, this.profile});
+  final int userId;
+  final String fullName;
+  final String email;
+  final String? photoUrl;
+
+  const Profile({
+    super.key,
+    required this.userId,
+    required this.fullName,
+    required this.email,
+    this.photoUrl,
+  });
 
   @override
   State<Profile> createState() => _ProfileState();
 }
 
 class _ProfileState extends State<Profile> {
-  Users? user;
-  File? _imageFile;
-  final DatabaseHelper dbHelper = DatabaseHelper();
+  late String fullName;
+  late String email;
+  String? photoUrl;
 
   @override
   void initState() {
     super.initState();
-    user = widget.profile;
-    if (user?.photo != null && user!.photo!.isNotEmpty) {
-      _imageFile = File(user!.photo!);
-    }
-  }
-
-  Future<void> _navigateToEditProfile() async {
-    if (user == null) return;
-
-    final updatedUser = await Navigator.push<Users>(
-      context,
-      MaterialPageRoute(builder: (_) => EditProfile(user: user!)),
-    );
-
-    if (updatedUser != null) {
-      setState(() {
-        user = updatedUser;
-        if (user?.photo != null && user!.photo!.isNotEmpty) {
-          _imageFile = File(user!.photo!);
-        }
-      });
-    }
+    fullName = widget.fullName;
+    email = widget.email;
+    photoUrl = widget.photoUrl;
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool hasPhoto = _imageFile != null && _imageFile!.existsSync();
+    final bool hasNetworkPhoto =
+        photoUrl != null &&
+        photoUrl!.startsWith("http") &&
+        photoUrl!.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
+      backgroundColor: const Color(0xFFF0F2F5),
       appBar: AppBar(
         backgroundColor: Colors.deepPurpleAccent,
-        elevation: 2,
+        elevation: 4,
         title: const Text(
-          "Profile",
-          style: TextStyle(fontWeight: FontWeight.w600, letterSpacing: 1.1),
+          "My Profile",
+          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2),
         ),
         centerTitle: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(18)),
-        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: _navigateToEditProfile,
-            tooltip: 'Edit Profile',
+            icon: const Icon(Icons.settings),
+            onPressed: () async {
+              // Open EditProfile and update state on return
+              final updatedUser = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditProfile(
+                    user: Users(
+                      id: widget.userId,
+                      name: fullName,
+                      email: email,
+                      photo: photoUrl,
+                    ),
+                  ),
+                ),
+              );
+              if (updatedUser != null && mounted) {
+                final userObj = updatedUser is Users
+                    ? updatedUser
+                    : Users.fromJson(updatedUser as Map<String, dynamic>);
+                setState(() {
+                  fullName = userObj.name;
+                  email = userObj.email;
+                  photoUrl = userObj.photo;
+                });
+              }
+            },
           ),
         ],
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(22)),
+        ),
       ),
       body: SingleChildScrollView(
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 25),
+            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Profile photo with elegant glow
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 20,
-                        offset: Offset(0, 10),
+                Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 18,
+                            offset: Offset(0, 6),
+                          ),
+                        ],
+                        border: Border.all(color: primaryColor, width: 3),
                       ),
-                    ],
-                    border: Border.all(color: primaryColor, width: 4),
-                  ),
-                  child: CircleAvatar(
-                    radius: 80,
-                    backgroundColor: Colors.white,
-                    backgroundImage: hasPhoto
-                        ? FileImage(_imageFile!)
-                        : const AssetImage("assets/no_user.jpg")
-                              as ImageProvider,
-                  ),
+                      child: CircleAvatar(
+                        radius: 75,
+                        backgroundColor: Colors.white,
+                        backgroundImage: hasNetworkPhoto
+                            ? NetworkImage(photoUrl!)
+                            : const AssetImage("assets/no_user.jpg")
+                                  as ImageProvider,
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 8,
+                      right: 8,
+                      child: GestureDetector(
+                        onTap: () {
+                          // Open photo edit
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: primaryColor,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.edit,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+
                 const SizedBox(height: 24),
 
-                // Name
                 Text(
-                  user?.fullName ?? "No Name",
+                  fullName,
                   style: const TextStyle(
-                    fontSize: 28,
+                    fontSize: 26,
                     fontWeight: FontWeight.bold,
                     color: primaryColor,
-                    letterSpacing: 1.2,
                   ),
                 ),
-                const SizedBox(height: 8),
-
-                // Email
+                const SizedBox(height: 6),
                 Text(
-                  user?.email ?? "No Email",
+                  email,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey.shade600,
+                    color: Colors.grey.shade700,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 30),
 
-                // Divider
-                Divider(color: Colors.grey.shade300, thickness: 1.2),
-                const SizedBox(height: 30),
+                Divider(thickness: 1.2, color: Colors.grey.shade300),
+                const SizedBox(height: 20),
 
-                // Full Name card
+                // Info cards with icons and better spacing
                 _buildInfoCard(
-                  icon: Icons.person,
+                  icon: Icons.person_outline,
                   title: "Full Name",
-                  value: user?.fullName ?? "",
+                  value: fullName,
                 ),
-
-                // Email card
                 _buildInfoCard(
-                  icon: Icons.email,
+                  icon: Icons.email_outlined,
                   title: "Email",
-                  value: user?.email ?? "",
+                  value: email,
+                ),
+                _buildInfoCard(
+                  icon: Icons.verified_user_outlined,
+                  title: "Account Status",
+                  value: "Active",
+                  iconColor: Colors.green,
                 ),
               ],
             ),
@@ -155,19 +196,43 @@ class _ProfileState extends State<Profile> {
     required IconData icon,
     required String title,
     required String value,
+    Color? iconColor,
   }) {
-    return Card(
-      elevation: 4,
-      shadowColor: Colors.grey.shade300,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      margin: const EdgeInsets.symmetric(vertical: 12),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: ListTile(
-        leading: Icon(icon, color: primaryColor, size: 32),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        leading: Icon(icon, color: iconColor ?? primaryColor, size: 30),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+        ),
         subtitle: Text(
           value,
-          style: TextStyle(color: Colors.grey.shade800, fontSize: 16),
+          style: TextStyle(
+            color: Colors.grey.shade800,
+            fontSize: 15.5,
+            fontWeight: FontWeight.w500,
+          ),
         ),
+        trailing: const Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: Colors.grey,
+        ),
+        onTap: () {
+          // Optional: Add navigation or popup
+        },
       ),
     );
   }

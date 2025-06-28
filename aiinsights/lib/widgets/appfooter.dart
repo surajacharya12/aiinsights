@@ -2,17 +2,25 @@ import 'package:aiinsights/Views/thinkbot.dart';
 import 'package:aiinsights/Views/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../JSON/users.dart';
 
 class Appfooter extends StatelessWidget {
-  final Users? profile;
+  final int? userId;
+  final String? fullName;
+  final String? email;
+  final String? photoUrl;
 
-  const Appfooter({super.key, this.profile});
+  const Appfooter({
+    super.key,
+    this.userId,
+    this.fullName,
+    this.email,
+    this.photoUrl,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white, // <-- corrected here
+      color: Colors.white,
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
@@ -21,21 +29,17 @@ class Appfooter extends StatelessWidget {
           // Home button (No navigation)
           IconButton(
             icon: const Icon(Icons.home, color: Colors.black),
-            onPressed: () {
-              // Home button (No navigation)
-            },
+            onPressed: () {},
           ),
 
           // Chatbot (Thinkbot)
           IconButton(
             icon: const Icon(FontAwesomeIcons.robot, color: Colors.black),
             onPressed: () {
-              if (profile != null) {
-                Navigator.pushReplacement(
+              if (email != null && email!.isNotEmpty) {
+                Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatbotScreen(profile: profile!),
-                  ),
+                  MaterialPageRoute(builder: (context) => ChatbotScreen()),
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -56,23 +60,33 @@ class Appfooter extends StatelessWidget {
           ),
 
           // Profile button
-          IconButton(
-            icon: const Icon(Icons.person, color: Colors.black),
-            onPressed: () {
-              if (profile != null) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Profile(profile: profile!),
-                  ),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("User profile not found.")),
-                );
-              }
-            },
-          ),
+          userId != null && email != null && email!.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.person, color: Colors.black),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Profile(
+                          userId: userId!,
+                          fullName: fullName ?? "User",
+                          email: email!,
+                          photoUrl: photoUrl,
+                        ),
+                      ),
+                    );
+                  },
+                )
+              : IconButton(
+                  icon: const Icon(Icons.person, color: Colors.grey),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("User profile not found. Please log in."),
+                      ),
+                    );
+                  },
+                ),
         ],
       ),
     );

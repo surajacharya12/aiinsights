@@ -1,4 +1,3 @@
-import 'package:aiinsights/api/generate-course-layout.dart';
 import 'package:flutter/material.dart';
 
 class CreateCourse extends StatefulWidget {
@@ -37,49 +36,25 @@ class _CreateCourseState extends State<CreateCourse> {
       final includeVideo = _includeVideo;
       final userEmail = widget.userEmail;
 
-      if (userEmail.isEmpty) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("User email missing. Cannot create course."),
-          ),
-        );
-        return;
-      }
-
-      bool success = await CourseGenerator.generateAndStoreCourse(
-        name: name,
-        description: desc,
-        category: category,
-        level: level,
-        chapterCount: chapterCount,
-        includeVideo: includeVideo,
-        userEmail: userEmail,
-      );
+      await Future.delayed(const Duration(seconds: 1)); // simulate loading
 
       setState(() => _isLoading = false);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            success
-                ? 'Course "$name" created successfully!'
-                : 'Failed to create course. Please try again.',
-          ),
+          content: Text('Template ready for "$name". No API call made.'),
         ),
       );
 
-      if (success) {
-        _formKey.currentState!.reset();
-        _courseNameController.clear();
-        _descriptionController.clear();
-        _categoryController.clear();
-        _chapterCountController.clear();
-        setState(() {
-          _includeVideo = false;
-          _selectedLevel = 'Beginner';
-        });
-      }
+      _formKey.currentState!.reset();
+      _courseNameController.clear();
+      _descriptionController.clear();
+      _categoryController.clear();
+      _chapterCountController.clear();
+      setState(() {
+        _includeVideo = false;
+        _selectedLevel = 'Beginner';
+      });
     }
   }
 
