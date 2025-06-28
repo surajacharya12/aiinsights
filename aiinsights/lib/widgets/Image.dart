@@ -3,6 +3,9 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
 
 class GeminiImageGenScreen extends StatefulWidget {
   const GeminiImageGenScreen({super.key});
@@ -96,6 +99,40 @@ class _GeminiImageGenScreenState extends State<GeminiImageGenScreen> {
     }
   }
 
+  Future<void> _downloadImage() async {
+    if (_imageBytes == null) return;
+    // Request storage permission (Android)
+    if (Platform.isAndroid) {
+      final status = await Permission.storage.request();
+      if (!status.isGranted) {
+        setState(() {
+          _error = 'Storage permission denied.';
+        });
+        return;
+      }
+    }
+    try {
+      final directory = Platform.isAndroid
+          ? await getExternalStorageDirectory()
+          : await getApplicationDocumentsDirectory();
+      final path = directory!.path;
+      final file = File(
+        '$path/aiinsights_image_${DateTime.now().millisecondsSinceEpoch}.png',
+      );
+      await file.writeAsBytes(_imageBytes!);
+      setState(() {
+        _error = null;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Image saved to $path')));
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to save image: $e';
+      });
+    }
+  }
+
   Widget buildImageResult() {
     return Container(
       constraints: const BoxConstraints(minHeight: 500),
@@ -127,7 +164,7 @@ class _GeminiImageGenScreenState extends State<GeminiImageGenScreen> {
             ),
             const SizedBox(height: 8),
             ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: _downloadImage,
               icon: const Icon(Icons.download, color: Colors.white, size: 20),
               label: const Text('Download'),
               style: ElevatedButton.styleFrom(

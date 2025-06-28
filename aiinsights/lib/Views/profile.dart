@@ -95,6 +95,29 @@ class _ProfileState extends State<Profile> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // Modern Profile Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.account_circle_rounded,
+                      color: primaryColor,
+                      size: 36,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      "Profile Overview",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade800,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+
                 Stack(
                   alignment: Alignment.bottomRight,
                   children: [

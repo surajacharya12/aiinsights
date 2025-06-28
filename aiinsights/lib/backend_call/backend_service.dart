@@ -5,7 +5,9 @@ import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 
 class BackendService {
-  final String baseUrl = "http://localhost:3001";
+  final String baseUrl = Platform.isAndroid
+      ? "http://10.0.2.2:3001"
+      : "http://localhost:3001";
 
   Future<Map<String, dynamic>> loginUser({
     required String email,
@@ -136,12 +138,17 @@ class BackendService {
     required String name,
     required String email,
     String? photo,
+    String? password,
+    String? currentPassword,
   }) async {
     try {
       final bodyMap = {
         'name': name,
         'email': email,
         if (photo != null) 'photo': photo,
+        if (password != null && password.isNotEmpty) 'password': password,
+        if (currentPassword != null && currentPassword.isNotEmpty)
+          'currentPassword': currentPassword,
       };
       final response = await http.put(
         Uri.parse('$baseUrl/user/$userId'),

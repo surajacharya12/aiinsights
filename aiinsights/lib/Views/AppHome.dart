@@ -294,14 +294,7 @@ class _ApphomeState extends State<Apphome> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 16,
-              ),
-              child: const Mainpage(),
-            ),
-          ),
+          Expanded(child: Mainpage(userName: fullName ?? "User")),
           Appfooter(
             userId: userId,
             fullName: fullName,

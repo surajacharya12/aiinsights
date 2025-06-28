@@ -31,16 +31,19 @@ class _ExploreState extends State<Explore> {
           const SizedBox(height: 20),
 
           // Headline
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              'Explore More Courses',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.deepPurple,
+          Row(
+            children: const [
+              Icon(Icons.explore_rounded, color: Colors.deepPurple, size: 30),
+              SizedBox(width: 10),
+              Text(
+                'Explore More Courses',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
               ),
-            ),
+            ],
           ),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
@@ -82,16 +85,19 @@ class _ExploreState extends State<Explore> {
           const SizedBox(height: 16),
 
           // Section Title
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              "Featured Courses",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
-                color: Colors.deepPurple,
+          Row(
+            children: const [
+              Icon(Icons.star_rounded, color: Colors.amber, size: 26),
+              SizedBox(width: 8),
+              Text(
+                "Featured Courses",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.deepPurple,
+                ),
               ),
-            ),
+            ],
           ),
           const SizedBox(height: 8),
 
