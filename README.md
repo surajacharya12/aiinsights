@@ -2,6 +2,24 @@
 
 AIInsights is a cross-platform AI-powered learning and course creation platform. It features a Flutter-based frontend and a Node.js backend, enabling users to generate, manage, and launch courses with the help of AI tools.
 
+## API Setup
+
+### Frontend (Flutter)
+
+For the Flutter frontend to work with AI and backend features, you must set your API keys and backend endpoints:
+
+- Open `lib/api/api.dart` or the relevant config files.
+- Add your API keys (e.g., for Gemini, Firebase, etc.).
+- Set your backend URLs as needed.
+
+### Backend (Node.js)
+
+For the backend to connect to databases, cloud services, or external APIs:
+
+- Open `aiinsights_backend/config/` and review files like `db.js` and `schema.js`.
+- Set your database connection strings, API keys, and any other required environment variables.
+- You may use a `.env` file for sensitive configuration (make sure to add `.env` to `.gitignore`).
+
 ## Features
 
 - AI-powered image and content generation
