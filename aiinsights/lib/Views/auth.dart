@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../Components/button.dart';
 import '../Components/colors.dart';
 import 'login.dart';
 import 'signup.dart';
@@ -26,7 +25,12 @@ class AuthScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.15),
+                    color: Color.fromRGBO(
+                      128,
+                      128,
+                      128,
+                      0.15,
+                    ), // grey with 15% opacity
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   ),
@@ -86,7 +90,9 @@ class AuthScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(24),
                         ),
                         elevation: 8,
-                        shadowColor: primaryColor.withOpacity(0.7),
+                        shadowColor: primaryColor.withOpacity(
+                          0.7,
+                        ), // fallback to withOpacity if .withAlpha is not suitable
                       ),
                       child: const Text(
                         "LOG IN",
