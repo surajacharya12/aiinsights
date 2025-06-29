@@ -5,12 +5,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import '../JSON/users.dart';
 import '../Components/colors.dart';
 import '../backend_call/backend_service.dart';
 
 class EditProfile extends StatefulWidget {
-  final Users user;
+  final Map<String, dynamic> user;
   const EditProfile({super.key, required this.user});
 
   @override
@@ -32,10 +31,11 @@ class _EditProfileState extends State<EditProfile> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.user.name);
-    _emailController = TextEditingController(text: widget.user.email);
-    if (widget.user.photo != null && widget.user.photo!.isNotEmpty) {
-      _imageFile = File(widget.user.photo!);
+    _nameController = TextEditingController(text: widget.user['name'] ?? '');
+    _emailController = TextEditingController(text: widget.user['email'] ?? '');
+    if (widget.user['photo'] != null &&
+        (widget.user['photo'] as String).isNotEmpty) {
+      _imageFile = File(widget.user['photo']);
     }
   }
 
@@ -89,10 +89,11 @@ class _EditProfileState extends State<EditProfile> {
     try {
       // If image changed, upload it first
       Map<String, dynamic>? photoResult;
-      String? newPhoto = widget.user.photo;
-      if (_imageFile != null && _imageFile!.path != (widget.user.photo ?? '')) {
+      String? newPhoto = widget.user['photo'];
+      if (_imageFile != null &&
+          _imageFile!.path != (widget.user['photo'] ?? '')) {
         photoResult = await backendService.uploadUserPhoto(
-          userId: widget.user.id,
+          userId: widget.user['id'],
           imageFile: _imageFile!,
         );
         if (photoResult['success'] != true) {
@@ -108,7 +109,7 @@ class _EditProfileState extends State<EditProfile> {
 
       // Update user profile in backend
       final updateResult = await backendService.updateUserProfile(
-        userId: widget.user.id,
+        userId: widget.user['id'],
         name: name,
         email: email,
         photo: newPhoto,

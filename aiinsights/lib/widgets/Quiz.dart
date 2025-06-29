@@ -2,18 +2,18 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
-import '../JSON/users.dart';
+import '../backend_call/backend_service.dart';
 
 class QuizScreen extends StatefulWidget {
-  final Users profile;
   final String topic;
   final int numberOfQuestions;
+  final String? userId; // Optional: pass userId if needed
 
   const QuizScreen({
     super.key,
-    required this.profile,
     required this.topic,
     required this.numberOfQuestions,
+    this.userId,
   });
 
   @override
@@ -23,12 +23,14 @@ class QuizScreen extends StatefulWidget {
 class _QuizScreenState extends State<QuizScreen> {
   late final GenerativeModel _model;
   late final ChatSession _chatSession;
+  final BackendService _backendService = BackendService();
 
   bool _isLoading = false;
   bool _isSubmitted = false;
 
   List<Map<String, dynamic>> _quiz = [];
   List<String?> _selectedAnswers = [];
+  Map<String, dynamic>? _userProfile;
 
   // New getter to check if all questions have been answered
   bool get _allAnswered => !_selectedAnswers.contains(null);
@@ -39,7 +41,19 @@ class _QuizScreenState extends State<QuizScreen> {
     const apiKey = 'AIzaSyCOEjEAsk-DEDvBBO9fz0sQnJ6DOR9DJ8M';
     _model = GenerativeModel(model: 'gemini-2.0-flash-exp', apiKey: apiKey);
     _chatSession = _model.startChat(history: []);
+    if (widget.userId != null) {
+      _fetchUserProfile(widget.userId!);
+    }
     _generateQuiz();
+  }
+
+  Future<void> _fetchUserProfile(String userId) async {
+    final result = await _backendService.getUserProfile(userId: userId);
+    if (result['success'] == true) {
+      setState(() {
+        _userProfile = result['user'];
+      });
+    }
   }
 
   Future<void> _generateQuiz() async {

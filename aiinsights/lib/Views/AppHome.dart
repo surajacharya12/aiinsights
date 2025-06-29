@@ -202,9 +202,7 @@ class _ApphomeState extends State<Apphome> {
                 if (email != null) {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => InputScreen(profile: null),
-                    ),
+                    MaterialPageRoute(builder: (context) => InputScreen()),
                   );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(

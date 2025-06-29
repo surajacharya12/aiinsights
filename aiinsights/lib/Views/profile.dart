@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import '../Components/colors.dart';
-import '../JSON/users.dart';
 import '../widgets/EditProfile.dart';
 import 'package:flutter/material.dart';
 
@@ -62,23 +61,21 @@ class _ProfileState extends State<Profile> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => EditProfile(
-                    user: Users(
-                      id: widget.userId,
-                      name: fullName,
-                      email: email,
-                      photo: photoUrl,
-                    ),
+                    user: {
+                      'id': widget.userId,
+                      'name': fullName,
+                      'email': email,
+                      'photo': photoUrl,
+                    },
                   ),
                 ),
               );
               if (updatedUser != null && mounted) {
-                final userObj = updatedUser is Users
-                    ? updatedUser
-                    : Users.fromJson(updatedUser as Map<String, dynamic>);
+                final userObj = updatedUser as Map<String, dynamic>;
                 setState(() {
-                  fullName = userObj.name;
-                  email = userObj.email;
-                  photoUrl = userObj.photo;
+                  fullName = userObj['name'] ?? fullName;
+                  email = userObj['email'] ?? email;
+                  photoUrl = userObj['photo'] ?? photoUrl;
                 });
               }
             },

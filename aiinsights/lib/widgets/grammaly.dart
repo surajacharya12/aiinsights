@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:aiinsights/api/api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,7 +17,7 @@ class _GrammalyState extends State<Grammaly> {
   String correctedText = '';
   bool loading = false;
 
-  final String apiKey = 'AIzaSyCOEjEAsk-DEDvBBO9fz0sQnJ6DOR9DJ8M';
+  final apiKeyValue = GEMINI().apiKeyValue;
 
   int countWords(String text) {
     if (text.trim().isEmpty) return 0;
@@ -34,7 +35,7 @@ class _GrammalyState extends State<Grammaly> {
           'Correct the grammar of the following text and return only the corrected version:\n\n"${_controller.text}"';
 
       final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKeyValue',
       );
 
       final response = await http.post(

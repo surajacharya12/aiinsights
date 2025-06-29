@@ -1,12 +1,9 @@
-import 'package:aiinsights/JSON/users.dart';
 import 'package:aiinsights/widgets/Quiz.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class InputScreen extends StatefulWidget {
-  final Users? profile; // nullable
-
-  const InputScreen({super.key, this.profile});
+  const InputScreen({super.key});
 
   @override
   State<InputScreen> createState() => _InputScreenState();
@@ -27,21 +24,11 @@ class _InputScreenState extends State<InputScreen> {
       return;
     }
 
-    if (widget.profile == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('User profile not found')));
-      return;
-    }
-
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => QuizScreen(
-          profile: widget.profile!, // non-nullable after null check
-          topic: topic,
-          numberOfQuestions: numQns,
-        ),
+        builder: (context) =>
+            QuizScreen(topic: topic, numberOfQuestions: numQns),
       ),
     );
   }

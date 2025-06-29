@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:aiinsights/api/api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
@@ -20,7 +21,7 @@ class _GeminiImageGenScreenState extends State<GeminiImageGenScreen> {
   bool _loading = false;
   String? _error;
 
-  final String _apiKey = 'AIzaSyCOEjEAsk-DEDvBBO9fz0sQnJ6DOR9DJ8M';
+  final apiKeyValue = GEMINI().apiKeyValue;
 
   Future<void> generateImage(String prompt, String aspectRatio) async {
     setState(() {
@@ -31,7 +32,7 @@ class _GeminiImageGenScreenState extends State<GeminiImageGenScreen> {
     });
 
     final url = Uri.parse(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=$_apiKey',
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=$apiKeyValue',
     );
 
     final headers = {'Content-Type': 'application/json'};
@@ -101,34 +102,62 @@ class _GeminiImageGenScreenState extends State<GeminiImageGenScreen> {
 
   Future<void> _downloadImage() async {
     if (_imageBytes == null) return;
-    // Request storage permission (Android)
-    if (Platform.isAndroid) {
-      final status = await Permission.storage.request();
-      if (!status.isGranted) {
-        setState(() {
-          _error = 'Storage permission denied.';
-        });
-        return;
-      }
-    }
+    String? savedPath;
+    String? errorMsg;
     try {
-      final directory = Platform.isAndroid
-          ? await getExternalStorageDirectory()
-          : await getApplicationDocumentsDirectory();
-      final path = directory!.path;
-      final file = File(
-        '$path/aiinsights_image_${DateTime.now().millisecondsSinceEpoch}.png',
-      );
-      await file.writeAsBytes(_imageBytes!);
+      if (Platform.isMacOS) {
+        final directory = Directory("${Platform.environment['HOME']}/Pictures");
+        if (!await directory.exists()) {
+          await directory.create(recursive: true);
+        }
+        final file = File(
+          '${directory.path}/aiinsights_image_${DateTime.now().millisecondsSinceEpoch}.png',
+        );
+        await file.writeAsBytes(_imageBytes!);
+        savedPath = file.path;
+      } else if (Platform.isAndroid || Platform.isIOS) {
+        // Request storage/gallery permission (Android & iOS)
+        PermissionStatus status = PermissionStatus.denied;
+        if (Platform.isAndroid) {
+          if (await Permission.storage.request().isGranted) {
+            status = PermissionStatus.granted;
+          }
+        } else if (Platform.isIOS) {
+          if (await Permission.photos.request().isGranted) {
+            status = PermissionStatus.granted;
+          }
+        }
+        if (!status.isGranted) {
+          setState(() {
+            _error = 'Storage or gallery permission denied.';
+          });
+          return;
+        }
+        final directory = await getApplicationDocumentsDirectory();
+        final file = File(
+          '${directory.path}/aiinsights_image_${DateTime.now().millisecondsSinceEpoch}.png',
+        );
+        await file.writeAsBytes(_imageBytes!);
+        savedPath = file.path;
+      } else {
+        // Fallback for other platforms
+        final directory = await getApplicationDocumentsDirectory();
+        final file = File(
+          '${directory.path}/aiinsights_image_${DateTime.now().millisecondsSinceEpoch}.png',
+        );
+        await file.writeAsBytes(_imageBytes!);
+        savedPath = file.path;
+      }
       setState(() {
         _error = null;
       });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Image saved to $path')));
+      ).showSnackBar(SnackBar(content: Text('Image saved to $savedPath')));
     } catch (e) {
+      errorMsg = 'Failed to save image: $e';
       setState(() {
-        _error = 'Failed to save image: $e';
+        _error = errorMsg;
       });
     }
   }

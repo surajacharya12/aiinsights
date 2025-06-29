@@ -12,7 +12,7 @@ class AuthScreen extends StatelessWidget {
     final media = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: Colors.white, // Plain white background
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -22,8 +22,7 @@ class AuthScreen extends StatelessWidget {
               width: media.width * 0.85,
               constraints: const BoxConstraints(maxWidth: 400),
               decoration: BoxDecoration(
-                color: Colors
-                    .white, // White card on white bg (can add subtle shadow)
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
@@ -37,21 +36,21 @@ class AuthScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    "Authentication",
+                    "AIInsights Academy",
                     style: TextStyle(
                       color: primaryColor,
-                      fontSize: 34,
+                      fontSize: 30,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.1,
                     ),
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    "Authenticate to access your vital information",
+                    "Create and launch your own courses with the power of AI.\nSign in to get started!",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.grey.shade700,
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -62,10 +61,11 @@ class AuthScreen extends StatelessWidget {
                     child: Image.asset(
                       "assets/startup.jpg",
                       width: double.infinity,
-                      height: media.height * 0.3,
+                      height: media.height * 0.28,
                       fit: BoxFit.cover,
                     ),
                   ),
+
                   const SizedBox(height: 36),
 
                   SizedBox(
@@ -89,7 +89,7 @@ class AuthScreen extends StatelessWidget {
                         shadowColor: primaryColor.withOpacity(0.7),
                       ),
                       child: const Text(
-                        "LOGIN",
+                        "LOG IN",
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -121,7 +121,7 @@ class AuthScreen extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        "SIGN UP",
+                        "GET STARTED",
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -130,6 +130,30 @@ class AuthScreen extends StatelessWidget {
                         ),
                       ),
                     ),
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // ➕ Powered by Eagle
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/eagle.jpg', // 🔁 Make sure this image exists in assets
+                        height: 30,
+                        width: 30,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Powered by Eagle",
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

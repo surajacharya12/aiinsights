@@ -1,3 +1,4 @@
+import 'package:aiinsights/api/api.dart';
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
@@ -19,7 +20,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   void initState() {
     super.initState();
 
-    const apiKeyValue = 'AIzaSyCOEjEAsk-DEDvBBO9fz0sQnJ6DOR9DJ8M';
+    final apiKeyValue = GEMINI().apiKeyValue;
     _model = GenerativeModel(
       model: 'gemini-2.0-flash-exp',
       apiKey: apiKeyValue,
