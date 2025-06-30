@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../backend_call/CourseServiceCreate.dart';
+import '../CourseCntent/CourseDetailsPage.dart';
 
 class CreateCourse extends StatefulWidget {
   final String userEmail;
@@ -34,16 +36,40 @@ class _CreateCourseState extends State<CreateCourse> {
           int.tryParse(_chapterCountController.text.trim()) ?? 0;
       final level = _selectedLevel;
       final includeVideo = _includeVideo;
+      final email = widget.userEmail;
 
-      await Future.delayed(const Duration(seconds: 1));
+      // Use chapterCount as duration for now (or adjust as needed)
+      final duration = chapterCount.toString();
+
+      final courseService = CourseService();
+      final result = await courseService.addCourse(
+        name: name,
+        description: desc,
+        category: category,
+        level: level,
+        duration: duration,
+        includeVideo: includeVideo,
+        email: email,
+      );
 
       setState(() => _isLoading = false);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Template ready for "$name". No API call made.'),
-        ),
-      );
+      if (result['success'] == true && result['courseId'] != null) {
+        // Navigate to details page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EditCoursePage(
+              courseId: result['courseId'].toString(),
+              viewcourse: true,
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'] ?? 'Failed to add course')),
+        );
+      }
 
       _formKey.currentState!.reset();
       _courseNameController.clear();
@@ -68,8 +94,6 @@ class _CreateCourseState extends State<CreateCourse> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create Course'),

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Add Course API</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    label { display: block; margin-top: 1rem; }
+    input, textarea, select { width: 300px; padding: 0.5rem; }
+    button { margin-top: 1rem; padding: 0.5rem 1rem; }
+    #result { margin-top: 2rem; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h2>Test /course/add API</h2>
+  <form id="courseForm">
+    <label>Name: <input name="name" value="AI for Beginners" required></label>
+    <label>Description: <textarea name="description">A beginner friendly course on AI concepts.</textarea></label>
+    <label>Category: <input name="category" value="Technology"></label>
+    <label>Level: <input name="level" value="Beginner"></label>
+    <label>Duration: <input name="duration" value="4 weeks"></label>
+    <label>Include Video: <select name="includeVideo"><option value="true">Yes</option><option value="false">No</option></select></label>
+    <label>Email: <input name="email" value="testuser@example.com" required></label>
+    <button type="submit">Submit</button>
+  </form>
+  <div id="result"></div>
+  <script>
+    document.getElementById('courseForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = Object.fromEntries(new FormData(form));
+      data.includeVideo = data.includeVideo === 'true';
+      document.getElementById('result').textContent = 'Loading...';
+      try {
+        const res = await fetch('http://localhost:3001/course/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const json = await res.json();
+        document.getElementById('result').textContent = JSON.stringify(json, null, 2);
+      } catch (err) {
+        document.getElementById('result').textContent = 'Error: ' + err;
+      }
+    };
+  </script>
+</body>
+</html>

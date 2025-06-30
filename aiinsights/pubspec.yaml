@@ -32,6 +32,15 @@ dependencies:
   lucide_icons: ^0.257.0
   shared_preferences: ^2.5.3
   dio: ^5.8.0+1
+  cached_network_image: ^3.4.1
+  flutter_launcher_icons: ^0.14.4
+  fade_shimmer: ^2.4.0
+  fluttertoast: ^8.2.12
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/appicon/icon.png"
 
 dev_dependencies:
   flutter_test:

@@ -7,15 +7,30 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { body, validationResult } from 'express-validator';
+import { fileURLToPath } from 'url';
 
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { sql, eq } from 'drizzle-orm';
 import { usersTable } from './config/schema.js';
+import { addNewCourse } from './course/AddNewCourse.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(bodyParser.json());
 app.use(helmet());
+
+// Helmet with relaxed CSP for development/testing (allows inline scripts)
+app.use(
+  helmet.contentSecurityPolicy({
+    useDefaults: true,
+    directives: {
+      "script-src": ["'self'", "'unsafe-inline'"],
+    },
+  })
+);
 
 // Connect to Neon
 const pg = neon(process.env.DATABASE_URL);
@@ -191,7 +206,13 @@ app.put('/user/:id', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
+// Add New Course route
+app.post('/course/add', addNewCourse);
+
+// Serve static files from the backend root (for testAddCourse.html)
+app.use(express.static(__dirname));
+
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
