@@ -1,17 +1,11 @@
 import 'dart:io';
-import 'package:aiinsights/backend_call/backend_service.dart';
+import 'package:aiinsights/widgets/Home/AppSidebar.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:aiinsights/Views/dashboard.dart';
-import 'package:aiinsights/Views/explore.dart';
-import 'package:aiinsights/widgets/AiTools.dart';
-import 'package:aiinsights/widgets/appfooter.dart';
-import 'package:aiinsights/widgets/createcourse.dart';
-import 'package:aiinsights/widgets/input_form.dart';
-import 'package:aiinsights/widgets/mainpage.dart';
+import 'package:aiinsights/backend_call/backend_service.dart';
+import 'package:aiinsights/widgets/Home/appfooter.dart';
+import 'package:aiinsights/widgets/Home/mainpage.dart';
 import 'package:aiinsights/Views/login.dart';
-
-// Import your BackendService class
 
 class Apphome extends StatefulWidget {
   const Apphome({super.key});
@@ -21,7 +15,6 @@ class Apphome extends StatefulWidget {
 }
 
 class _ApphomeState extends State<Apphome> {
-  // User info variables fetched from backend
   String? fullName;
   String? email;
   String? photoUrl;
@@ -56,7 +49,6 @@ class _ApphomeState extends State<Apphome> {
       if (result['success'] == true && result['user'] != null) {
         final user = result['user'];
         String? photo = user['photo'];
-        // Fix: avoid double slash in photo URL
         if (photo != null && photo.isNotEmpty && !photo.startsWith('http')) {
           if (photo.startsWith('/')) {
             photo = "${backendService.baseUrl}" + photo;
@@ -91,22 +83,6 @@ class _ApphomeState extends State<Apphome> {
     }
   }
 
-  // Utility to handle profile image safely
-  ImageProvider getProfileImage() {
-    if (photoUrl != null && photoUrl!.isNotEmpty) {
-      if (photoUrl!.startsWith("http")) {
-        return NetworkImage(photoUrl!);
-      } else {
-        try {
-          final file = File(photoUrl!);
-          if (file.existsSync()) return FileImage(file);
-        } catch (_) {}
-      }
-    }
-    return const AssetImage("assets/no_user.jpg");
-  }
-
-  // Logout logic
   Future<void> handleLogout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
@@ -122,148 +98,23 @@ class _ApphomeState extends State<Apphome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            UserAccountsDrawerHeader(
-              decoration: const BoxDecoration(color: Colors.deepPurpleAccent),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.white,
-                backgroundImage: getProfileImage(),
-              ),
-              accountName: isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : Text(
-                      fullName ?? "Guest User",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-              accountEmail: isLoading
-                  ? null
-                  : Text(
-                      email ?? "No email",
-                      style: const TextStyle(fontSize: 14),
-                    ),
-            ),
-
-            ListTile(
-              leading: const Icon(Icons.add, color: Colors.teal),
-              title: const Text("Create Course"),
-              onTap: () {
-                if (email != null && email!.isNotEmpty) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          CreateCourse(userEmail: email!.trim()),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'User email not found, please login again.',
-                      ),
-                    ),
-                  );
-                }
-              },
-            ),
-
-            ListTile(
-              leading: const Icon(Icons.dashboard, color: Colors.blueAccent),
-              title: const Text("Dashboard"),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const Dashboard()),
-                );
-              },
-            ),
-
-            ListTile(
-              leading: const Icon(Icons.explore, color: Colors.green),
-              title: const Text("Explore"),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const Explore()),
-                );
-              },
-            ),
-
-            ListTile(
-              leading: const Icon(Icons.quiz, color: Colors.orange),
-              title: const Text("Quiz"),
-              onTap: () {
-                if (email != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => InputScreen()),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Please log in again.")),
-                  );
-                }
-              },
-            ),
-
-            ListTile(
-              leading: const Icon(Icons.smart_toy, color: Colors.purple),
-              title: const Text("AI Tools"),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AiTools()),
-                );
-              },
-            ),
-
-            const Divider(),
-
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.redAccent),
-              title: const Text(
-                "Logout",
-                style: TextStyle(color: Colors.redAccent),
-              ),
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text("Confirm Logout"),
-                    content: const Text("Are you sure you want to logout?"),
-                    actions: [
-                      TextButton(
-                        child: const Text("Cancel"),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.logout, size: 18),
-                        label: const Text("Logout"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          foregroundColor: Colors.white,
-                        ),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          handleLogout();
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
+      drawer: AppDrawer(
+        fullName: fullName,
+        email: email,
+        photoUrl: photoUrl,
+        userId: userId,
+        backendService: backendService,
+        onLogout: handleLogout,
       ),
       appBar: AppBar(
-        title: const Text('Aiinsight'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.school, color: Colors.green),
+            SizedBox(width: 8),
+            const Text('Aiinsight'),
+          ],
+        ),
         backgroundColor: Colors.deepPurpleAccent,
         centerTitle: true,
         leading: Builder(

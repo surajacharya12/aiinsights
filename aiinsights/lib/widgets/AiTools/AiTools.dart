@@ -1,7 +1,7 @@
-import 'package:aiinsights/widgets/Image.dart';
+import 'package:aiinsights/widgets/AiTools/image/Image.dart';
+import 'package:aiinsights/widgets/AiTools/grammer/grammaly.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'grammaly.dart';
 
 class AiTools extends StatefulWidget {
   const AiTools({super.key});
@@ -88,7 +88,7 @@ class _AiToolsState extends State<AiTools> with SingleTickerProviderStateMixin {
         ),
         child: TabBarView(
           controller: _tabController,
-          children: const [GeminiImageGenScreen(), Grammaly()],
+          children: const [GeminiImageGenScreen(), GrammarScreen()],
         ),
       ),
     );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:aiinsights/widgets/course_card.dart';
+import 'package:aiinsights/widgets/Course/course_card.dart';
 
 class ContinueLearning extends StatelessWidget {
   const ContinueLearning({super.key});

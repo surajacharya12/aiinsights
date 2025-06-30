@@ -1,13 +1,13 @@
 import 'dart:convert';
+import 'package:aiinsights/widgets/services/quiz_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
-import '../backend_call/backend_service.dart';
+import '../../backend_call/backend_service.dart';
 
 class QuizScreen extends StatefulWidget {
   final String topic;
   final int numberOfQuestions;
-  final String? userId; // Optional: pass userId if needed
+  final String? userId;
 
   const QuizScreen({
     super.key,
@@ -21,9 +21,8 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
-  late final GenerativeModel _model;
-  late final ChatSession _chatSession;
   final BackendService _backendService = BackendService();
+  final QuizApiService _quizApiService = QuizApiService();
 
   bool _isLoading = false;
   bool _isSubmitted = false;
@@ -32,15 +31,11 @@ class _QuizScreenState extends State<QuizScreen> {
   List<String?> _selectedAnswers = [];
   Map<String, dynamic>? _userProfile;
 
-  // New getter to check if all questions have been answered
   bool get _allAnswered => !_selectedAnswers.contains(null);
 
   @override
   void initState() {
     super.initState();
-    const apiKey = 'AIzaSyCOEjEAsk-DEDvBBO9fz0sQnJ6DOR9DJ8M';
-    _model = GenerativeModel(model: 'gemini-2.0-flash-exp', apiKey: apiKey);
-    _chatSession = _model.startChat(history: []);
     if (widget.userId != null) {
       _fetchUserProfile(widget.userId!);
     }
@@ -64,34 +59,15 @@ class _QuizScreenState extends State<QuizScreen> {
       _isSubmitted = false;
     });
 
-    final prompt =
-        '''
-Generate ${widget.numberOfQuestions} multiple-choice quiz questions on the topic "${widget.topic}".
-Respond only with JSON array. No explanation or markdown.
-Each object must be:
-{
-  "question": "Your question?",
-  "options": ["A", "B", "C", "D"],
-  "answer": "Correct Answer"
-}
-''';
-
     try {
-      final response = await _chatSession.sendMessage(Content.text(prompt));
-      final cleaned = (response.text ?? '')
-          .replaceAll("```json", "")
-          .replaceAll("```", "")
-          .trim();
-
-      final decoded = jsonDecode(cleaned);
-      if (decoded is List) {
-        setState(() {
-          _quiz = List<Map<String, dynamic>>.from(decoded);
-          _selectedAnswers = List<String?>.filled(_quiz.length, null);
-        });
-      } else {
-        throw 'Invalid JSON';
-      }
+      final quiz = await _quizApiService.generateQuiz(
+        topic: widget.topic,
+        numberOfQuestions: widget.numberOfQuestions,
+      );
+      setState(() {
+        _quiz = quiz;
+        _selectedAnswers = List<String?>.filled(_quiz.length, null);
+      });
     } catch (e) {
       setState(() {
         _quiz = [

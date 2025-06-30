@@ -1,70 +1,41 @@
-import 'dart:convert';
-import 'package:aiinsights/api/api.dart';
+import 'package:aiinsights/widgets/services/grammar_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
 
-class Grammaly extends StatefulWidget {
-  const Grammaly({super.key});
+class GrammarScreen extends StatefulWidget {
+  const GrammarScreen({super.key});
 
   @override
-  State<Grammaly> createState() => _GrammalyState();
+  State<GrammarScreen> createState() => _GrammarScreenState();
 }
 
-class _GrammalyState extends State<Grammaly> {
+class _GrammarScreenState extends State<GrammarScreen> {
   final TextEditingController _controller = TextEditingController();
+  final GrammarService _grammarService = GrammarService();
+
   String correctedText = '';
   bool loading = false;
-
-  final apiKeyValue = GEMINI().apiKeyValue;
 
   int countWords(String text) {
     if (text.trim().isEmpty) return 0;
     return text.trim().split(RegExp(r'\s+')).length;
   }
 
-  Future<void> checkGrammar() async {
+  Future<void> handleCheckGrammar() async {
     setState(() {
       loading = true;
       correctedText = '';
     });
 
     try {
-      final prompt =
-          'Correct the grammar of the following text and return only the corrected version:\n\n"${_controller.text}"';
-
-      final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKeyValue',
-      );
-
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'contents': [
-            {
-              'parts': [
-                {'text': prompt},
-              ],
-            },
-          ],
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        final result =
-            responseData['candidates']?[0]?['content']?['parts']?[0]?['text'];
-        setState(() {
-          correctedText = result ?? "No correction available.";
-        });
-      } else {
-        throw Exception('Failed: ${response.statusCode}');
-      }
-    } catch (error) {
+      final result = await _grammarService.correctGrammar(_controller.text);
       setState(() {
-        correctedText = 'Error occurred while checking: $error';
+        correctedText = result;
+      });
+    } catch (e) {
+      setState(() {
+        correctedText = 'Error occurred: $e';
       });
     } finally {
       setState(() => loading = false);
@@ -88,7 +59,6 @@ class _GrammalyState extends State<Grammaly> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FF),
       body: Center(
@@ -169,7 +139,7 @@ class _GrammalyState extends State<Grammaly> {
                   child: ElevatedButton.icon(
                     onPressed: loading || _controller.text.trim().isEmpty
                         ? null
-                        : checkGrammar,
+                        : handleCheckGrammar,
                     icon: const Icon(Icons.auto_fix_high, color: Colors.white),
                     label: loading
                         ? const SizedBox(

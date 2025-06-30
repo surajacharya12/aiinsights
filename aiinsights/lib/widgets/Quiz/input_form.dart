@@ -1,4 +1,4 @@
-import 'package:aiinsights/widgets/Quiz.dart';
+import 'package:aiinsights/widgets/Quiz/Quiz.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

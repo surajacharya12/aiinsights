@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:aiinsights/Views/dashboard.dart';
 import 'package:aiinsights/Views/explore.dart';
-import 'package:aiinsights/widgets/continue_learning.dart';
-import 'package:aiinsights/widgets/explore_courses.dart';
+import 'package:aiinsights/widgets/ContinueLearning/continue_learning.dart';
+import 'package:aiinsights/widgets/explore/explore_courses.dart';
+import 'package:aiinsights/widgets/MyCourses/my_courses.dart';
 import 'package:flutter/material.dart';
-import 'my_courses.dart';
 
 class Mainpage extends StatefulWidget {
   final String userName;

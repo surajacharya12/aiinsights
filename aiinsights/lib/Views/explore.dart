@@ -1,4 +1,4 @@
-import 'package:aiinsights/widgets/ExploreCoursesGrid.dart';
+import 'package:aiinsights/widgets/explore/ExploreCoursesGrid.dart';
 import 'package:flutter/material.dart';
 
 class Explore extends StatefulWidget {

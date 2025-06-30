@@ -1,7 +1,6 @@
-import 'package:aiinsights/widgets/ContinueLearningGrid.dart';
-import 'package:aiinsights/widgets/MyCoursesGrid%20.dart';
+import 'package:aiinsights/widgets/ContinueLearning/ContinueLearningGrid.dart';
+import 'package:aiinsights/widgets/MyCourses/MyCoursesGrid%20.dart';
 import 'package:flutter/material.dart';
-import 'package:aiinsights/widgets/createcourse.dart';
 
 class Dashboard extends StatefulWidget {
   final String? userEmail;
