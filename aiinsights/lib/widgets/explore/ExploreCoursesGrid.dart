@@ -1,31 +1,35 @@
 import 'package:flutter/material.dart';
-import '../Course/course_card.dart';
 import '../../backend_call/explore.dart';
+import '../Course/course_card.dart';
 
-class ExploreCoursesGrid extends StatefulWidget {
+class ExploreCoursesGrid extends StatelessWidget {
   final String searchQuery;
 
-  const ExploreCoursesGrid({super.key, required this.searchQuery});
+  const ExploreCoursesGrid({Key? key, required this.searchQuery})
+    : super(key: key);
 
-  @override
-  State<ExploreCoursesGrid> createState() => _ExploreCoursesGridState();
-}
-
-class _ExploreCoursesGridState extends State<ExploreCoursesGrid> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: fetchCourses(widget.searchQuery),
+      future: fetchCourses(searchQuery),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
+
         if (snapshot.hasError) {
-          return Center(child: Text('Error: \\${snapshot.error}'));
-        }
-        final courses = snapshot.data ?? [];
-        if (courses.isEmpty) {
           return Center(
+            child: Text(
+              'Error: ${snapshot.error}',
+              style: const TextStyle(color: Colors.red),
+            ),
+          );
+        }
+
+        final courses = snapshot.data ?? [];
+
+        if (courses.isEmpty) {
+          return const Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -39,28 +43,26 @@ class _ExploreCoursesGridState extends State<ExploreCoursesGrid> {
             ),
           );
         }
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: GridView.builder(
-            itemCount: courses.length,
-            physics: const BouncingScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: 1,
-            ),
-            itemBuilder: (context, index) {
-              final course = courses[index];
-              return CourseCard(
-                title: course['name'] != null && course['noOfChapters'] != null
-                    ? '${course['name']}\n${course['noOfChapters']} Chapters'
-                    : (course['name'] ?? 'No Name'),
-                color: Colors.deepPurpleAccent,
-                imageUrl: course['bannerImageURL'],
-              );
-            },
+
+        return GridView.builder(
+          itemCount: courses.length,
+          padding: const EdgeInsets.all(12),
+          physics: const BouncingScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
+            childAspectRatio: 0.9,
           ),
+          itemBuilder: (context, index) {
+            final course = courses[index];
+            return CourseCard(
+              title:
+                  "${course['name']}\n${course['noOfChapters'] ?? '0'} Chapters",
+              imageUrl: course['bannerImageURL'] ?? '',
+              color: Colors.deepPurpleAccent,
+            );
+          },
         );
       },
     );

@@ -2,17 +2,18 @@ import express from "express";
 import { db } from "../config/db.js";
 import { coursesTable } from "../config/schema.js";
 import { desc, eq, and, ne, sql } from "drizzle-orm";
-import { getUserFromRequest } from "../utils/auth.js"; 
 
 const router = express.Router();
 
-// GET: Fetch courses
 router.get("/", async (req, res) => {
   try {
     const courseId = req.query.courseId;
     const search = req.query.search?.toLowerCase();
-    const user = await getUserFromRequest(req); 
-    // Case 1: Get all generated courses (courseId == 0)
+
+    // Get user email from header (if needed)
+    const userEmail = req.headers['x-user-email'];
+
+    // Case 1: Get all generated courses (courseId === "0")
     if (courseId === "0") {
       let result = await db
         .select()
@@ -20,23 +21,11 @@ router.get("/", async (req, res) => {
         .where(
           and(
             sql`${coursesTable.courseContent} IS NOT NULL`,
-            ne(coursesTable.courseContent, "")
+            ne(coursesTable.courseContent, ""),
           )
         );
 
-      result = result.filter((course) => {
-        const cc = course.courseContent;
-        if (!cc || typeof cc !== 'string') return false;
-        const trimmed = cc.trim();
-        if (trimmed === '' || trimmed === '{}' || trimmed === '[]') return false;
-        try {
-          const parsed = JSON.parse(trimmed);
-          if (Array.isArray(parsed) && parsed.length === 0) return false;
-          if (typeof parsed === 'object' && Object.keys(parsed).length === 0) return false;
-        } catch {
-        }
-        return true;
-      });
+      console.log("Courses fetched before filtering by search:", result.length);
 
       if (search) {
         result = result.filter((course) =>
@@ -44,7 +33,7 @@ router.get("/", async (req, res) => {
         );
       }
 
-      console.log("Fetched generated courses (filtered):", result);
+      console.log("Courses fetched after filtering by search:", result.length);
       return res.json(result);
     }
 
@@ -55,22 +44,22 @@ router.get("/", async (req, res) => {
         .from(coursesTable)
         .where(eq(coursesTable.cid, courseId));
 
-      console.log("Fetched course by ID:", result);
+      console.log("Fetched course by ID:", result.length);
       return res.json(result[0] || {});
     }
 
-    // Case 3: Get courses by current user
-    if (!user?.email) {
-      return res.status(401).json({ message: "Unauthorized: Missing or invalid x-user-email header" });
+    // Case 3: Get courses for the current user
+    if (!userEmail) {
+      return res.status(401).json({ message: "Unauthorized: missing user email" });
     }
 
     const result = await db
       .select()
       .from(coursesTable)
-      .where(eq(coursesTable.userEmail, user.email))
+      .where(eq(coursesTable.userEmail, userEmail))
       .orderBy(desc(coursesTable.id));
 
-    console.log("Fetched user courses:", result);
+    console.log("Fetched user courses:", result.length);
     return res.json(result);
   } catch (error) {
     console.error("❌ Error fetching courses:", error);

@@ -234,7 +234,7 @@ app.delete('/user/:id', async (req, res) => {
 app.post('/course/add', addNewCourse);
 app.get('/course/get', getCourseById);
 app.use('/course/generate-course-content', generateCourseContentRouter);
-app.use('/course/explore', coursesExploreRouter);
+app.use('/course/explore', coursesExploreRouter); // <-- Make sure this path matches your Dart URL!
 
 // Start server
 const PORT = process.env.PORT || 3001;
