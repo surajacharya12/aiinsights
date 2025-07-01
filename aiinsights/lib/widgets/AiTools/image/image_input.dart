@@ -22,15 +22,18 @@ class _ImageInputState extends State<ImageInput> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     return Container(
       constraints: const BoxConstraints(minHeight: 500),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.grey[200]!),
+        color: colorScheme.surface,
+        border: Border.all(color: colorScheme.outline.withOpacity(0.08)),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: theme.shadowColor.withOpacity(0.08),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -42,21 +45,28 @@ class _ImageInputState extends State<ImageInput> {
         children: [
           Text(
             'Generate Amazing Images',
-            style: TextStyle(
+            style: theme.textTheme.headlineSmall?.copyWith(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.blue[600],
+              color: colorScheme.primary,
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Transforming Ideas into Visual Reality',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 24),
           Text(
             'This section represents the visual tools powered by AI that bring creativity to life.',
-            style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontSize: 16,
+              color: isDark ? Colors.grey[300] : Colors.grey[700],
+            ),
           ),
           const SizedBox(height: 24),
           Column(
@@ -64,10 +74,10 @@ class _ImageInputState extends State<ImageInput> {
             children: [
               Text(
                 'Enter your prompt',
-                style: TextStyle(
+                style: theme.textTheme.bodyMedium?.copyWith(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: Colors.grey[800],
+                  color: colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 8),
@@ -75,16 +85,26 @@ class _ImageInputState extends State<ImageInput> {
                 absorbing: widget.loading,
                 child: TextFormField(
                   maxLines: 5,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurface,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Describe the image you want to generate...',
+                    hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                      color: isDark ? Colors.grey[400] : Colors.grey[700],
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
+                      borderSide: BorderSide(
+                        color: colorScheme.outline.withOpacity(0.2),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Colors.blue[400]!),
+                      borderSide: BorderSide(color: colorScheme.primary),
                     ),
+                    filled: true,
+                    fillColor: colorScheme.background,
                     contentPadding: const EdgeInsets.all(12),
                   ),
                   onChanged: (value) => _prompt = value,
@@ -93,10 +113,10 @@ class _ImageInputState extends State<ImageInput> {
               const SizedBox(height: 16),
               Text(
                 'Aspect Ratio',
-                style: TextStyle(
+                style: theme.textTheme.bodyMedium?.copyWith(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: Colors.grey[800],
+                  color: colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 8),
@@ -124,15 +144,23 @@ class _ImageInputState extends State<ImageInput> {
                       });
                     }
                   },
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurface,
+                  ),
+                  dropdownColor: colorScheme.surface,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
+                      borderSide: BorderSide(
+                        color: colorScheme.outline.withOpacity(0.2),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Colors.blue[400]!),
+                      borderSide: BorderSide(color: colorScheme.primary),
                     ),
+                    filled: true,
+                    fillColor: colorScheme.background,
                     contentPadding: const EdgeInsets.all(12),
                   ),
                 ),
@@ -142,9 +170,9 @@ class _ImageInputState extends State<ImageInput> {
                 onPressed: widget.loading ? null : _handleSubmit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: widget.loading
-                      ? Colors.blue[400]
-                      : Colors.blue[600],
-                  foregroundColor: Colors.white,
+                      ? colorScheme.primary.withOpacity(0.7)
+                      : colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(
                     vertical: 12,
                     horizontal: 24,

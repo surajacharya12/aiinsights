@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class CourseCard extends StatelessWidget {
   final String title;
   final Color color;
+  final String? imageUrl;
 
   const CourseCard({
     super.key,
     required this.title,
     this.color = Colors.deepPurpleAccent,
+    this.imageUrl,
   });
 
   @override
@@ -26,7 +28,12 @@ class CourseCard extends StatelessWidget {
         children: [
           CircleAvatar(
             backgroundColor: color,
-            child: const Icon(Icons.school, color: Colors.white),
+            backgroundImage: imageUrl != null && imageUrl!.isNotEmpty
+                ? NetworkImage(imageUrl!)
+                : null,
+            child: (imageUrl == null || imageUrl!.isEmpty)
+                ? const Icon(Icons.school, color: Colors.white)
+                : null,
           ),
           const SizedBox(height: 10),
           Text(

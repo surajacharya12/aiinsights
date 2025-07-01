@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../backend_call/generateCourseContentServices.dart';
 
 class CourseScreen extends StatefulWidget {
   final Map<String, dynamic> course;
@@ -45,6 +46,65 @@ class _CourseScreenState extends State<CourseScreen> {
     }
 
     return 'data:image/png;base64,$bannerSrcRaw';
+  }
+
+  bool _isGenerating = false;
+
+  Future<void> _onGenerateContent() async {
+    setState(() {
+      _isGenerating = true;
+    });
+    try {
+      // You may want to extract these from the course or prompt user for them
+      final result = await CourseContentServices.generateCourseContent(
+        name: courseLayout?['name'] ?? 'Sample Course',
+        description: courseLayout?['description'] ?? 'Sample Description',
+        category: courseLayout?['category'] ?? 'General',
+        level: courseLayout?['level'] ?? 'Beginner',
+        duration: courseLayout?['duration']?.toString() ?? '1h',
+        includeVideo: true,
+        email: 'test@example.com', // Replace with actual user email if available
+      );
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(result['success'] == true ? 'Success' : 'Error'),
+            content: Text(result['success'] == true
+                ? 'Content generated! Course ID: ${result['courseId'] ?? ''}'
+                : (result['message'] ?? 'Failed to generate content')),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Error'),
+            content: Text('Failed to generate content: $e'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGenerating = false;
+        });
+      }
+    }
   }
 
   @override
@@ -207,7 +267,28 @@ class _CourseScreenState extends State<CourseScreen> {
                                 ),
                               ),
                             )
-                          : const SizedBox.shrink(),
+                          : Column(
+                              children: [
+                                ElevatedButton.icon(
+                                  onPressed: _isGenerating ? null : _onGenerateContent,
+                                  icon: const Icon(Icons.auto_fix_high),
+                                  label: _isGenerating
+                                      ? const SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        )
+                                      : const Text('Generate Content'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.deepPurple[400],
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                     ),
                   ],
                 ),

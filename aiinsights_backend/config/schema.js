@@ -26,3 +26,15 @@ export const coursesTable = pgTable("courses", {
   bannerImageURL: varchar("bannerImageURL").default(""),
   courseContent: varchar("courseContent"), // ✅ just this
 });
+
+
+export const enrollmentsTable = pgTable("enrollments", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  courseId: varchar("courseId", { length: 255 })
+    .notNull()
+    .references(() => coursesTable.cid),
+  userEmail: varchar("userEmail")
+    .notNull()
+    .references(() => usersTable.email),
+  completedChapters: json("completedChapters"),
+});

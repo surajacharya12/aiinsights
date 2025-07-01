@@ -77,6 +77,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Widget _buildWelcomeMessage() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -100,12 +102,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               "Hi, I’m ThinkBot!",
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: isDark ? Colors.white : Colors.black87,
               ),
             ),
             const SizedBox(height: 8),
@@ -123,6 +125,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   Widget _buildMessage(Map<String, String> message) {
     final isUser = message['sender'] == 'user';
     final messageText = message['text'] ?? '';
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -133,9 +138,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser)
-            const CircleAvatar(
-              backgroundColor: Colors.deepPurple,
-              child: Icon(Icons.smart_toy, color: Colors.white),
+            CircleAvatar(
+              backgroundColor: colorScheme.primary,
+              child: const Icon(Icons.smart_toy, color: Colors.white),
               radius: 16,
             ),
           if (!isUser) const SizedBox(width: 10),
@@ -143,7 +148,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isUser ? Colors.deepPurpleAccent : Colors.grey.shade200,
+                color: isUser
+                    ? colorScheme.primary
+                    : (isDark ? colorScheme.surface : Colors.grey.shade200),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
@@ -162,7 +169,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 messageText,
                 style: TextStyle(
                   fontSize: 15,
-                  color: isUser ? Colors.white : Colors.black87,
+                  color: isUser
+                      ? colorScheme.onPrimary
+                      : (isDark ? colorScheme.onSurface : Colors.black87),
                 ),
               ),
             ),
@@ -207,8 +216,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: isDark ? colorScheme.background : Colors.grey.shade100,
       body: Column(
         children: [
           _buildHeader(),
@@ -233,7 +245,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           SafeArea(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              color: Colors.white,
+              color: isDark ? colorScheme.surface : Colors.white,
               child: Row(
                 children: [
                   Expanded(
@@ -241,9 +253,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       controller: _controller,
                       decoration: InputDecoration(
                         hintText: "Ask anything...",
-                        hintStyle: TextStyle(color: Colors.grey.shade500),
+                        hintStyle: TextStyle(
+                          color: isDark
+                              ? Colors.grey[400]
+                              : Colors.grey.shade500,
+                        ),
                         filled: true,
-                        fillColor: Colors.grey.shade100,
+                        fillColor: isDark
+                            ? colorScheme.background
+                            : Colors.grey.shade100,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 20,
                           vertical: 16,
@@ -252,6 +270,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                           borderRadius: BorderRadius.circular(30),
                           borderSide: BorderSide.none,
                         ),
+                      ),
+                      style: TextStyle(
+                        color: isDark ? colorScheme.onSurface : Colors.black,
                       ),
                       onSubmitted: (_) => _sendMessage(),
                     ),

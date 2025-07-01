@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:aiinsights/widgets/services/quiz_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:appearance/appearance.dart';
 import '../../backend_call/backend_service.dart';
 
 class QuizScreen extends StatefulWidget {
@@ -177,14 +178,19 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final appearance = Appearance.of(context);
+    final isDark = appearance?.mode == ThemeMode.dark;
     return Scaffold(
-      backgroundColor: Colors.deepPurple.shade50,
+      backgroundColor: isDark ? Colors.grey[900] : Colors.deepPurple.shade50,
       appBar: AppBar(
         backgroundColor: Colors.deepPurple,
         elevation: 0,
         title: Text(
-          "Quiz: ${widget.topic}",
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          "Quiz: " + widget.topic,
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.deepPurple.shade100 : null,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
@@ -222,6 +228,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w600,
                       fontSize: 18,
+                      color: Colors.white,
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -241,11 +248,16 @@ class _QuizScreenState extends State<QuizScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Text(
-                "🎉 Your Score: ${_calculateScore()} / ${_quiz.length}",
+                "🎉 Your Score: " +
+                    _calculateScore().toString() +
+                    " / " +
+                    _quiz.length.toString(),
                 style: GoogleFonts.poppins(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple.shade700,
+                  color: isDark
+                      ? Colors.deepPurple.shade100
+                      : Colors.deepPurple.shade700,
                 ),
               ),
             ),

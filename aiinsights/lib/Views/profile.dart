@@ -37,13 +37,15 @@ class _ProfileState extends State<Profile> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final bool hasNetworkPhoto =
         photoUrl != null &&
         photoUrl!.startsWith("http") &&
         photoUrl!.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F2F5),
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
         backgroundColor: Colors.deepPurpleAccent,
         elevation: 4,
@@ -96,18 +98,20 @@ class _ProfileState extends State<Profile> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.account_circle_rounded,
-                      color: primaryColor,
+                      color: theme.colorScheme.primary,
                       size: 36,
                     ),
                     const SizedBox(width: 10),
                     Text(
                       "Profile Overview",
-                      style: TextStyle(
-                        fontSize: 22,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.grey.shade800,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade800,
+                        fontSize: 22,
                         letterSpacing: 1.1,
                       ),
                     ),
@@ -121,18 +125,23 @@ class _ProfileState extends State<Profile> {
                     Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        boxShadow: const [
+                        boxShadow: [
                           BoxShadow(
-                            color: Colors.black26,
+                            color: Colors.black26.withOpacity(
+                              theme.brightness == Brightness.dark ? 0.5 : 1,
+                            ),
                             blurRadius: 18,
-                            offset: Offset(0, 6),
+                            offset: const Offset(0, 6),
                           ),
                         ],
-                        border: Border.all(color: primaryColor, width: 3),
+                        border: Border.all(
+                          color: theme.colorScheme.primary,
+                          width: 3,
+                        ),
                       ),
                       child: CircleAvatar(
                         radius: 75,
-                        backgroundColor: Colors.white,
+                        backgroundColor: colorScheme.surface,
                         backgroundImage: hasNetworkPhoto
                             ? NetworkImage(photoUrl!)
                             : const AssetImage("assets/no_user.jpg")
@@ -149,7 +158,7 @@ class _ProfileState extends State<Profile> {
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: primaryColor,
+                            color: theme.colorScheme.primary,
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -167,38 +176,42 @@ class _ProfileState extends State<Profile> {
 
                 Text(
                   fullName,
-                  style: const TextStyle(
-                    fontSize: 26,
+                  style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: primaryColor,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   email,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade700,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.grey.shade300
+                        : Colors.grey.shade700,
                     fontWeight: FontWeight.w500,
+                    fontSize: 16,
                   ),
                 ),
                 const SizedBox(height: 30),
 
-                Divider(thickness: 1.2, color: Colors.grey.shade300),
+                Divider(thickness: 1.2, color: theme.dividerColor),
                 const SizedBox(height: 20),
 
                 // Info cards with icons and better spacing
                 _buildInfoCard(
+                  context: context,
                   icon: Icons.person_outline,
                   title: "Full Name",
                   value: fullName,
                 ),
                 _buildInfoCard(
+                  context: context,
                   icon: Icons.email_outlined,
                   title: "Email",
                   value: email,
                 ),
                 _buildInfoCard(
+                  context: context,
                   icon: Icons.verified_user_outlined,
                   title: "Account Status",
                   value: "Active",
@@ -213,42 +226,55 @@ class _ProfileState extends State<Profile> {
   }
 
   Widget _buildInfoCard({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String value,
     Color? iconColor,
   }) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.15),
+            color: theme.shadowColor.withOpacity(0.08),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: ListTile(
-        leading: Icon(icon, color: iconColor ?? primaryColor, size: 30),
+        leading: Icon(
+          icon,
+          color: iconColor ?? theme.colorScheme.primary,
+          size: 30,
+        ),
         title: Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
         ),
         subtitle: Text(
           value,
-          style: TextStyle(
-            color: Colors.grey.shade800,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.brightness == Brightness.dark
+                ? Colors.grey.shade200
+                : Colors.grey.shade800,
             fontSize: 15.5,
             fontWeight: FontWeight.w500,
           ),
         ),
-        trailing: const Icon(
+        trailing: Icon(
           Icons.arrow_forward_ios,
           size: 16,
-          color: Colors.grey,
+          color: theme.brightness == Brightness.dark
+              ? Colors.grey.shade400
+              : Colors.grey,
         ),
         onTap: () {
           // Optional: Add navigation or popup

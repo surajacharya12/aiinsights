@@ -59,8 +59,11 @@ class _GrammarScreenState extends State<GrammarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FF),
+      backgroundColor: colorScheme.background,
       body: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1000),
@@ -69,14 +72,16 @@ class _GrammarScreenState extends State<GrammarScreen> {
           padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            gradient: const LinearGradient(
-              colors: [Color(0xFFE0E7FF), Colors.white],
+            gradient: LinearGradient(
+              colors: isDark
+                  ? [colorScheme.surface, colorScheme.background]
+                  : [const Color(0xFFE0E7FF), Colors.white],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: theme.shadowColor.withOpacity(0.1),
                 blurRadius: 24,
                 spreadRadius: 2,
               ),
@@ -91,7 +96,7 @@ class _GrammarScreenState extends State<GrammarScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1E3A8A),
+                    color: colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -99,7 +104,7 @@ class _GrammarScreenState extends State<GrammarScreen> {
                   'Fix grammar, spelling, and tone instantly using Gemini AI.',
                   style: GoogleFonts.poppins(
                     fontSize: 16,
-                    color: Colors.grey[700],
+                    color: isDark ? Colors.grey[300] : Colors.grey[700],
                   ),
                 ),
                 const SizedBox(height: 30),
@@ -107,19 +112,29 @@ class _GrammarScreenState extends State<GrammarScreen> {
                   controller: _controller,
                   onChanged: (_) => setState(() {}),
                   maxLines: 8,
-                  style: GoogleFonts.poppins(fontSize: 16),
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: colorScheme.onSurface,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Type or paste your text here (max 2000 words)',
+                    hintStyle: GoogleFonts.poppins(
+                      color: isDark ? Colors.grey[400] : Colors.grey[700],
+                    ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: colorScheme.surface,
                     contentPadding: const EdgeInsets.all(20),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
+                      borderSide: BorderSide(
+                        color: colorScheme.outline.withOpacity(0.3),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
+                      borderSide: BorderSide(
+                        color: colorScheme.outline.withOpacity(0.3),
+                      ),
                     ),
                   ),
                 ),
@@ -130,7 +145,7 @@ class _GrammarScreenState extends State<GrammarScreen> {
                     '${countWords(_controller.text)} / 2000 words',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
-                      color: Colors.grey[600],
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
                     ),
                   ),
                 ),
@@ -155,7 +170,7 @@ class _GrammarScreenState extends State<GrammarScreen> {
                             style: TextStyle(color: Colors.white, fontSize: 16),
                           ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6366F1),
+                      backgroundColor: colorScheme.primary,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 28,
                         vertical: 14,
@@ -188,13 +203,22 @@ class _GrammarScreenState extends State<GrammarScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.green[50],
+                          color: isDark
+                              ? Colors.green[900]?.withOpacity(0.15)
+                              : Colors.green[50],
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.green.shade100),
+                          border: Border.all(
+                            color: isDark
+                                ? Colors.green.shade900.withOpacity(0.3)
+                                : Colors.green.shade100,
+                          ),
                         ),
                         child: Text(
                           correctedText,
-                          style: GoogleFonts.poppins(fontSize: 16),
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            color: colorScheme.onSurface,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -205,7 +229,7 @@ class _GrammarScreenState extends State<GrammarScreen> {
                           icon: const Icon(Icons.copy),
                           label: const Text('Copy'),
                           style: TextButton.styleFrom(
-                            foregroundColor: const Color(0xFF10B981),
+                            foregroundColor: colorScheme.primary,
                           ),
                         ),
                       ),

@@ -52,10 +52,7 @@ class AppDrawer extends StatelessWidget {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       leading: Container(
-        decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(12),
-        ),
+        decoration: BoxDecoration(color: iconColor.withOpacity(0.15)),
         padding: const EdgeInsets.all(8),
         child: Icon(icon, color: iconColor, size: 28),
       ),
@@ -83,7 +80,6 @@ class AppDrawer extends StatelessWidget {
         color: Colors.deepPurpleAccent.withOpacity(0.7),
       ),
       onTap: onTap,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(1)),
       hoverColor: Colors.deepPurpleAccent.withOpacity(0.1),
     );
   }
@@ -91,6 +87,8 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusBarHeight = MediaQuery.of(context).padding.top;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Drawer(
       elevation: 20,
@@ -121,7 +119,7 @@ class AppDrawer extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 38,
-                  backgroundColor: Colors.white,
+                  backgroundColor: colorScheme.onPrimary,
                   backgroundImage: getProfileImage(),
                 ),
                 const SizedBox(width: 16),
@@ -131,10 +129,10 @@ class AppDrawer extends StatelessWidget {
                     children: [
                       Text(
                         fullName ?? "Guest User",
-                        style: const TextStyle(
-                          fontSize: 22,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: colorScheme.onPrimary,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          fontSize: 22,
                           letterSpacing: 0.7,
                         ),
                         maxLines: 1,
@@ -143,9 +141,9 @@ class AppDrawer extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         email ?? "No email available",
-                        style: TextStyle(
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onPrimary.withOpacity(0.85),
                           fontSize: 14,
-                          color: Colors.white.withOpacity(0.85),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -159,7 +157,7 @@ class AppDrawer extends StatelessWidget {
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 10),
-              color: Colors.white,
+              color: colorScheme.background,
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 children: [
@@ -255,7 +253,12 @@ class AppDrawer extends StatelessWidget {
                       );
                     },
                   ),
-                  const Divider(thickness: 1, indent: 40, endIndent: 40),
+                  Divider(
+                    thickness: 1,
+                    indent: 40,
+                    endIndent: 40,
+                    color: colorScheme.outline.withOpacity(0.3),
+                  ),
                   buildListTile(
                     context: context,
                     icon: Icons.logout,
@@ -264,30 +267,47 @@ class AppDrawer extends StatelessWidget {
                     onTap: () {
                       showDialog(
                         context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text("Confirm Logout"),
-                          content: const Text(
-                            "Are you sure you want to logout?",
-                          ),
-                          actions: [
-                            TextButton(
-                              child: const Text("Cancel"),
-                              onPressed: () => Navigator.of(context).pop(),
+                        builder: (context) {
+                          final theme = Theme.of(context);
+                          return AlertDialog(
+                            backgroundColor: theme.colorScheme.background,
+                            title: Text(
+                              "Confirm Logout",
+                              style: theme.textTheme.titleLarge,
                             ),
-                            ElevatedButton.icon(
-                              icon: const Icon(Icons.logout, size: 18),
-                              label: const Text("Logout"),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.redAccent,
-                                foregroundColor: Colors.white,
+                            content: Text(
+                              "Are you sure you want to logout?",
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                            actions: [
+                              TextButton(
+                                child: Text(
+                                  "Cancel",
+                                  style: TextStyle(
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                                onPressed: () => Navigator.of(context).pop(),
                               ),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                onLogout();
-                              },
-                            ),
-                          ],
-                        ),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.logout, size: 18),
+                                label: const Text("Logout"),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.error,
+                                  foregroundColor: theme.colorScheme.onError,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  onLogout();
+                                },
+                              ),
+                            ],
+                          );
+                        },
                       );
                     },
                   ),

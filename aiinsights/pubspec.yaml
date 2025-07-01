@@ -36,7 +36,10 @@ dependencies:
   flutter_launcher_icons: ^0.14.4
   fade_shimmer: ^2.4.0
   fluttertoast: ^8.2.12
-
+  flutter_spinkit: ^5.2.0
+  flutter_markdown: ^0.7.7+1
+  file_picker: ^10.2.0
+  appearance: ^0.0.1
 flutter_icons:
   android: true
   ios: true

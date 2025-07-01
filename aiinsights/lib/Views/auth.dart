@@ -36,132 +36,141 @@ class AuthScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "AIInsights Academy",
-                    style: TextStyle(
-                      color: primaryColor,
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.1,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "AIInsights Academy",
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontSize: 24, // reduced from 30
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.1,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Create and launch your own courses with the power of AI.\nSign in to get started!",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.grey.shade700,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
+                    const SizedBox(height: 8), // reduced from 10
+                    Text(
+                      "Create and launch your own courses with the power of AI.\nSign in to get started!",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontSize: 13.5, // reduced from 15
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 30),
+                    const SizedBox(height: 20), // reduced from 30
 
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.asset(
-                      "assets/startup.jpg",
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                        16,
+                      ), // reduced from 20
+                      child: Image.asset(
+                        "assets/startup.jpg",
+                        width: double.infinity,
+                        height: media.height * 0.20, // reduced from 0.28
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+
+                    const SizedBox(height: 24), // reduced from 36
+
+                    SizedBox(
                       width: double.infinity,
-                      height: media.height * 0.28,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-
-                  const SizedBox(height: 36),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginScreen(),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 13,
+                          ), // reduced from 16
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              18,
+                            ), // reduced from 24
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
+                          elevation: 8,
+                          shadowColor: primaryColor.withOpacity(0.7),
                         ),
-                        elevation: 8,
-                        shadowColor: primaryColor.withOpacity(
-                          0.7,
-                        ), // fallback to withOpacity if .withAlpha is not suitable
-                      ),
-                      child: const Text(
-                        "LOG IN",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.1,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SignupScreen(),
+                        child: const Text(
+                          "LOG IN",
+                          style: TextStyle(
+                            fontSize: 15, // reduced from 18
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.1,
+                            color: Colors.white,
                           ),
-                        );
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: BorderSide(color: primaryColor, width: 2),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                      ),
-                      child: Text(
-                        "GET STARTED",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.1,
-                          color: primaryColor,
                         ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 30),
+                    const SizedBox(height: 14), // reduced from 20
 
-                  // ➕ Powered by Eagle
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        'assets/eagle.jpg', // 🔁 Make sure this image exists in assets
-                        height: 30,
-                        width: 30,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        "Powered by Eagle",
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          letterSpacing: 0.5,
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SignupScreen(),
+                            ),
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 13,
+                          ), // reduced from 16
+                          side: BorderSide(color: primaryColor, width: 2),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              18,
+                            ), // reduced from 24
+                          ),
+                        ),
+                        child: Text(
+                          "GET STARTED",
+                          style: TextStyle(
+                            fontSize: 15, // reduced from 18
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.1,
+                            color: primaryColor,
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+
+                    const SizedBox(height: 18), // reduced from 30
+                    // ➕ Powered by Eagle
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/eagle.jpg',
+                          height: 24, // reduced from 30
+                          width: 24, // reduced from 30
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Powered by Eagle",
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12.5, // reduced from 14
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -16,18 +16,21 @@ class ImageOutput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     return Container(
       constraints: const BoxConstraints(minHeight: 500),
       width: double.infinity,
       margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.shade200),
+        color: colorScheme.surface,
+        border: Border.all(color: colorScheme.outline.withOpacity(0.08)),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: theme.shadowColor.withOpacity(0.08),
             spreadRadius: 2,
             blurRadius: 10,
             offset: const Offset(0, 4),
@@ -37,7 +40,7 @@ class ImageOutput extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.image, size: 48, color: Colors.blue.shade600),
+          Icon(Icons.image, size: 48, color: colorScheme.primary),
           const SizedBox(height: 16),
           if (loading) ...[
             const SizedBox(
@@ -49,15 +52,18 @@ class ImageOutput extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Generating image...',
-              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ] else if (error != null) ...[
             Text(
               error!,
-              style: const TextStyle(
-                color: Colors.red,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: colorScheme.error,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
@@ -74,8 +80,8 @@ class ImageOutput extends StatelessWidget {
               icon: const Icon(Icons.download, size: 20),
               label: const Text('Download'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.shade600,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
@@ -87,9 +93,12 @@ class ImageOutput extends StatelessWidget {
               ),
             ),
           ] else ...[
-            const Text(
+            Text(
               'Your generated image will appear here.',
-              style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isDark ? Colors.grey.shade400 : Colors.grey,
+                fontStyle: FontStyle.italic,
+              ),
             ),
           ],
         ],

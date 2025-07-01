@@ -1,5 +1,6 @@
 import 'package:aiinsights/Views/thinkbot.dart';
 import 'package:aiinsights/Views/profile.dart';
+import 'package:aiinsights/widgets/Chat/chatpdf.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -19,8 +20,13 @@ class Appfooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final bool isDark = theme.brightness == Brightness.dark;
+    final iconColor = isDark ? colorScheme.onSurface : Colors.black;
+    final disabledIconColor = isDark ? Colors.grey.shade600 : Colors.grey;
     return Container(
-      color: Colors.white,
+      color: colorScheme.surface,
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
@@ -28,13 +34,13 @@ class Appfooter extends StatelessWidget {
         children: [
           // Home button (No navigation)
           IconButton(
-            icon: const Icon(Icons.home, color: Colors.black),
+            icon: Icon(Icons.home, color: iconColor),
             onPressed: () {},
           ),
 
           // Chatbot (Thinkbot)
           IconButton(
-            icon: const Icon(FontAwesomeIcons.robot, color: Colors.black),
+            icon: Icon(FontAwesomeIcons.robot, color: iconColor),
             onPressed: () {
               if (email != null && email!.isNotEmpty) {
                 Navigator.push(
@@ -51,10 +57,11 @@ class Appfooter extends StatelessWidget {
 
           // PDF button
           IconButton(
-            icon: const Icon(FontAwesomeIcons.filePdf, color: Colors.black),
+            icon: Icon(FontAwesomeIcons.filePdf, color: iconColor),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("PDF screen coming soon.")),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Chatpdf()),
               );
             },
           ),
@@ -62,7 +69,7 @@ class Appfooter extends StatelessWidget {
           // Profile button
           userId != null && email != null && email!.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.person, color: Colors.black),
+                  icon: Icon(Icons.person, color: iconColor),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -78,7 +85,7 @@ class Appfooter extends StatelessWidget {
                   },
                 )
               : IconButton(
-                  icon: const Icon(Icons.person, color: Colors.grey),
+                  icon: Icon(Icons.person, color: disabledIconColor),
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(

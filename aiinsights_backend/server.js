@@ -14,6 +14,9 @@ import { drizzle } from 'drizzle-orm/neon-http';
 import { sql, eq } from 'drizzle-orm';
 import { usersTable } from './config/schema.js';
 import { addNewCourse } from './course/AddNewCourse.js';
+import { getCourseById } from './course/GetCourse.js';
+import generateCourseContentRouter from './course/generate-course-content.js';
+import coursesExploreRouter from './course/coursesexplore.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,8 +24,6 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(bodyParser.json());
 app.use(helmet());
-
-// Helmet with relaxed CSP for development/testing (allows inline scripts)
 app.use(
   helmet.contentSecurityPolicy({
     useDefaults: true,
@@ -32,7 +33,7 @@ app.use(
   })
 );
 
-// Connect to Neon
+// Connect to Neon Postgres
 const pg = neon(process.env.DATABASE_URL);
 const db = drizzle(pg);
 
@@ -41,6 +42,7 @@ const uploadDir = './uploads';
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 app.use('/uploads', express.static('uploads'));
 
+// Multer setup for photo upload
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
@@ -51,20 +53,20 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Helper to normalize photo path (no double slash)
+// Normalize photo path
 function normalizePhotoPath(photo) {
   if (!photo) return photo;
-  // Remove trailing slash from baseUrl if present
-  if (photo.startsWith('/')) return photo;
-  return '/' + photo;
+  return photo.startsWith('/') ? photo : '/' + photo;
 }
 
-// Root route
+// Root
 app.get('/', (req, res) => {
   res.send('API is running!');
 });
 
-// Register
+// ========================== ROUTES ============================
+
+// ✅ Register
 app.post(
   '/register',
   [
@@ -96,7 +98,7 @@ app.post(
   }
 );
 
-// Login
+// ✅ Login
 app.post(
   '/login',
   [body('email').isEmail(), body('password').isLength({ min: 6 })],
@@ -124,7 +126,7 @@ app.post(
   }
 );
 
-// Photo upload and update
+// ✅ Photo upload
 app.post('/user/photo-upload', upload.single('photo'), async (req, res) => {
   const userId = parseInt(req.body.id, 10);
 
@@ -153,7 +155,7 @@ app.post('/user/photo-upload', upload.single('photo'), async (req, res) => {
   }
 });
 
-// Get user by ID
+// ✅ Get user
 app.get('/user/:id', async (req, res) => {
   const userId = parseInt(req.params.id, 10);
   if (!userId) return res.status(400).json({ error: 'Invalid user ID' });
@@ -173,7 +175,7 @@ app.get('/user/:id', async (req, res) => {
   }
 });
 
-// Update user (PATCH-style, safe for missing fields)
+// ✅ Update user
 app.put('/user/:id', async (req, res) => {
   const userId = parseInt(req.params.id, 10);
   if (!userId) return res.status(400).json({ error: 'Invalid user ID' });
@@ -206,12 +208,35 @@ app.put('/user/:id', async (req, res) => {
   }
 });
 
-// Add New Course route
+// ✅ Delete user
+app.delete('/user/:id', async (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  if (!userId) return res.status(400).json({ error: 'Invalid user ID' });
+
+  try {
+    const result = await db
+      .delete(usersTable)
+      .where(eq(usersTable.id, userId))
+      .returning();
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Course routes
 app.post('/course/add', addNewCourse);
+app.get('/course/get', getCourseById);
+app.use('/course/generate-course-content', generateCourseContentRouter);
+app.use('/course/explore', coursesExploreRouter);
 
-// Serve static files from the backend root (for testAddCourse.html)
-app.use(express.static(__dirname));
-
+// Start server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

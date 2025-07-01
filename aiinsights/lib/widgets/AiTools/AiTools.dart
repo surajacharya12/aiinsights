@@ -27,6 +27,9 @@ class _AiToolsState extends State<AiTools> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: true,
@@ -55,16 +58,20 @@ class _AiToolsState extends State<AiTools> with SingleTickerProviderStateMixin {
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: isDark
+                  ? Colors.white.withOpacity(0.08)
+                  : Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(30),
             ),
             child: TabBar(
               controller: _tabController,
               indicator: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
-                color: Colors.white,
+                color: isDark ? colorScheme.surface : Colors.white,
               ),
-              labelColor: const Color(0xFF4F46E5),
+              labelColor: isDark
+                  ? colorScheme.primary
+                  : const Color(0xFF4F46E5),
               unselectedLabelColor: Colors.white,
               labelStyle: GoogleFonts.poppins(
                 fontWeight: FontWeight.w600,
@@ -79,9 +86,11 @@ class _AiToolsState extends State<AiTools> with SingleTickerProviderStateMixin {
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFF3F4F6), Color(0xFFE0E7FF)],
+            colors: isDark
+                ? [colorScheme.background, colorScheme.surface]
+                : [const Color(0xFFF3F4F6), const Color(0xFFE0E7FF)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),

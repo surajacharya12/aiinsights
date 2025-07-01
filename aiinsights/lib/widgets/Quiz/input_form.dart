@@ -1,4 +1,5 @@
 import 'package:aiinsights/widgets/Quiz/Quiz.dart';
+import 'package:appearance/appearance.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -35,8 +36,10 @@ class _InputScreenState extends State<InputScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final appearance = Appearance.of(context);
+    final isDark = appearance?.mode == ThemeMode.dark;
     return Scaffold(
-      backgroundColor: Colors.deepPurple.shade50,
+      backgroundColor: isDark ? Colors.grey[900] : Colors.deepPurple.shade50,
       appBar: AppBar(
         title: const Text("Quiz Generator"),
         backgroundColor: Colors.deepPurple,
@@ -62,7 +65,9 @@ class _InputScreenState extends State<InputScreen> {
               style: GoogleFonts.poppins(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Colors.deepPurple.shade700,
+                color: isDark
+                    ? Colors.deepPurple.shade100
+                    : Colors.deepPurple.shade700,
               ),
             ),
             const SizedBox(height: 8),
@@ -70,7 +75,9 @@ class _InputScreenState extends State<InputScreen> {
               "Enter a topic and number of questions to generate a quiz tailored just for you.",
               style: GoogleFonts.poppins(
                 fontSize: 16,
-                color: Colors.deepPurple.shade300,
+                color: isDark
+                    ? Colors.deepPurple.shade200
+                    : Colors.deepPurple.shade300,
               ),
             ),
             const SizedBox(height: 32),
@@ -83,7 +90,7 @@ class _InputScreenState extends State<InputScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: isDark ? Colors.grey[850] : Colors.white,
               ),
             ),
             const SizedBox(height: 20),
@@ -97,7 +104,7 @@ class _InputScreenState extends State<InputScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: isDark ? Colors.grey[850] : Colors.white,
               ),
             ),
             const SizedBox(height: 30),

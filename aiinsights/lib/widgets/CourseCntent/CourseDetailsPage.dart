@@ -24,6 +24,7 @@ class EditCoursePage extends StatefulWidget {
 class _EditCoursePageState extends State<EditCoursePage> {
   bool _loading = false;
   Map<String, dynamic> _course = {};
+  String? _lastBackendResponse; // Store last backend response for debug
 
   String get baseUrl =>
       Platform.isAndroid ? "http://10.0.2.2:3001" : "http://localhost:3001";
@@ -42,9 +43,11 @@ class _EditCoursePageState extends State<EditCoursePage> {
         Uri.parse('$baseUrl/course/get?courseId=${widget.courseId}'),
         headers: {'Content-Type': 'application/json'},
       );
+      setState(() {
+        _lastBackendResponse = response.body;
+      });
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        // Normalize: extract the deepest valid course object
         Map<String, dynamic> normalized = data is Map<String, dynamic>
             ? Map<String, dynamic>.from(data)
             : {};
@@ -76,28 +79,34 @@ class _EditCoursePageState extends State<EditCoursePage> {
           backgroundColor: Colors.green,
         );
       } else {
-        // Show backend error message if available
         String errorMsg = 'Failed to load course';
+        String backendMsg = response.body;
+        int status = response.statusCode;
         try {
           final data = json.decode(response.body);
           if (data is Map && data['error'] != null) {
             errorMsg = data['error'].toString();
           }
         } catch (_) {}
+        // ignore: avoid_prin
+        print('Course load failed. Status: $status, Response: $backendMsg');
         Fluttertoast.showToast(
-          msg: errorMsg,
-          toastLength: Toast.LENGTH_SHORT,
+          msg: '$errorMsg\nStatus: $status',
+          toastLength: Toast.LENGTH_LONG,
           backgroundColor: Colors.red,
         );
         setState(() => _course = {});
       }
     } catch (error) {
+      setState(() {
+        _lastBackendResponse = error.toString();
+        _course = {};
+      });
       Fluttertoast.showToast(
         msg: "Network or parsing error: $error",
         toastLength: Toast.LENGTH_SHORT,
         backgroundColor: Colors.red,
       );
-      setState(() => _course = {});
     } finally {
       setState(() => _loading = false);
     }
@@ -189,8 +198,14 @@ class _EditCoursePageState extends State<EditCoursePage> {
   }
 
   Widget _buildCourseContentOrError() {
-    // If course is empty, try to fetch again or show a user-friendly message with debug info
     if (_course.isEmpty) {
+      // Try to parse the backend response for debug
+      dynamic parsedBackend;
+      try {
+        parsedBackend = json.decode(_lastBackendResponse ?? '');
+      } catch (_) {
+        parsedBackend = _lastBackendResponse;
+      }
       return Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -199,7 +214,7 @@ class _EditCoursePageState extends State<EditCoursePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
-                  'No course data found for this course.\nPlease check if the course exists or try again.',
+                  'No course data found for this course.\nPlease check if the course exists, the backend is running, or try again.',
                   style: TextStyle(fontSize: 16, color: Colors.red),
                   textAlign: TextAlign.center,
                 ),
@@ -209,6 +224,24 @@ class _EditCoursePageState extends State<EditCoursePage> {
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),
+                const SizedBox(height: 8),
+                if (_lastBackendResponse != null &&
+                    _lastBackendResponse!.isNotEmpty)
+                  Text(
+                    'Raw backend response:\n${_lastBackendResponse}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                const SizedBox(height: 8),
+                if (parsedBackend != null)
+                  Text(
+                    'Parsed backend response:\n${parsedBackend.toString()}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.blueGrey,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
               ],
             ),
           ),
@@ -232,7 +265,6 @@ class _EditCoursePageState extends State<EditCoursePage> {
         ),
       );
     }
-    // If course is not empty but not recognized, show debug info
     return Center(
       child: SingleChildScrollView(
         child: Padding(

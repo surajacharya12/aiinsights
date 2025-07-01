@@ -165,4 +165,21 @@ class BackendService {
       return {'success': false, 'message': 'Error: $e'};
     }
   }
+
+  Future<Map<String, dynamic>> deleteUserAccount({required int userId}) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/user/$userId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': data['message']};
+      } else {
+        return {'success': false, 'message': data['error'] ?? 'Delete failed'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Error: $e'};
+    }
+  }
 }

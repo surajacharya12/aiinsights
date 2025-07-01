@@ -14,13 +14,18 @@ class _ExploreState extends State<Explore> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F4F9),
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
         backgroundColor: Colors.deepPurpleAccent,
-        title: const Text(
+        title: Text(
           'Explore Courses',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onPrimary,
+          ),
         ),
         centerTitle: true,
         elevation: 4,
@@ -32,24 +37,33 @@ class _ExploreState extends State<Explore> {
 
           // Headline
           Row(
-            children: const [
-              Icon(Icons.explore_rounded, color: Colors.deepPurple, size: 30),
-              SizedBox(width: 10),
+            children: [
+              Icon(
+                Icons.explore_rounded,
+                color: theme.colorScheme.primary,
+                size: 30,
+              ),
+              const SizedBox(width: 10),
               Text(
                 'Explore More Courses',
-                style: TextStyle(
+                style: theme.textTheme.headlineSmall?.copyWith(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple,
+                  color: theme.colorScheme.primary,
                 ),
               ),
             ],
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
             child: Text(
               'Find courses that match your passion and learning goals.',
-              style: TextStyle(fontSize: 16, color: Colors.black54),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontSize: 16,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.grey.shade300
+                    : Colors.black54,
+              ),
             ),
           ),
 
@@ -65,11 +79,19 @@ class _ExploreState extends State<Explore> {
                   _searchQuery = value.toLowerCase();
                 });
               },
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: colorScheme.onSurface,
+              ),
               decoration: InputDecoration(
                 hintText: 'Search courses...',
-                prefixIcon: const Icon(Icons.search),
+                hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.grey.shade400
+                      : Colors.grey.shade700,
+                ),
+                prefixIcon: Icon(Icons.search, color: theme.iconTheme.color),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: colorScheme.surface,
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 0,
                   horizontal: 16,
@@ -86,15 +108,15 @@ class _ExploreState extends State<Explore> {
 
           // Section Title
           Row(
-            children: const [
+            children: [
               Icon(Icons.star_rounded, color: Colors.amber, size: 26),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 "Featured Courses",
-                style: TextStyle(
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
-                  color: Colors.deepPurple,
+                  color: theme.colorScheme.primary,
                 ),
               ),
             ],

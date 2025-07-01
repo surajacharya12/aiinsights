@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:aiinsights/Views/settings_page.dart';
 import 'package:aiinsights/widgets/Home/AppSidebar.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -133,8 +134,9 @@ class _ApphomeState extends State<Apphome> {
             splashColor: Colors.white,
             tooltip: 'Settings',
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Settings screen coming soon!")),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
               );
             },
           ),
