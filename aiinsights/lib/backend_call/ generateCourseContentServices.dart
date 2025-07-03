@@ -8,27 +8,21 @@ class CourseContentServices {
       : "http://localhost:3001";
 
   static Future<Map<String, dynamic>> generateCourseContent({
-    required String name,
-    required String description,
-    required String category,
-    required String level,
-    required String duration,
-    required bool includeVideo,
-    required String email,
+    required String courseId,
+    required String courseTitle,
+    required Map<String, dynamic> courseJson,
   }) async {
     try {
       final bodyMap = {
-        'name': name,
-        'description': description,
-        'category': category,
-        'level': level,
-        'duration': duration,
-        'includeVideo': includeVideo,
-        'email': email,
+        'courseId': courseId,
+        'courseTitle': courseTitle,
+        'courseJson': courseJson,
       };
 
       final response = await http.post(
-        Uri.parse('${CourseContentServices().baseUrl}/course/add'),
+        Uri.parse(
+          '${CourseContentServices().baseUrl}/course/generate-course-content',
+        ),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(bodyMap),
       );
@@ -36,7 +30,7 @@ class CourseContentServices {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        return {'success': true, 'courseId': data['courseId']};
+        return {'success': true, 'data': data};
       } else {
         return {
           'success': false,
@@ -50,16 +44,13 @@ class CourseContentServices {
 
   Future<Map<String, dynamic>> getCourseById(String courseId) async {
     try {
-      final url = '$baseUrl/course/get?courseId=$courseId';
+      final url =
+          '${baseUrl}/course/generate-course-content?courseId=$courseId';
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        if (decoded is Map<String, dynamic>) {
-          return decoded;
-        } else {
-          return {'error': 'Unexpected response format'};
-        }
+        return decoded;
       } else {
         return {
           'error': 'Failed to load course with status ${response.statusCode}',

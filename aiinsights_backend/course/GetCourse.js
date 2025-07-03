@@ -1,24 +1,29 @@
+// ./course/GetCourse.js
 import { db } from "../config/db.js";
 import { coursesTable } from "../config/schema.js";
 import { eq } from "drizzle-orm";
 
-// GET /course/get?courseId=...
 async function getCourseById(req, res) {
-  const { courseId } = req.query;
-  if (!courseId) {
-    return res.status(400).json({ error: "Missing courseId" });
-  }
   try {
-    const courses = await db
+    const courseId = req.query.courseId;
+
+    if (!courseId) {
+      return res.status(400).json({ error: "Missing courseId in query params" });
+    }
+
+    const course = await db
       .select()
       .from(coursesTable)
       .where(eq(coursesTable.cid, courseId));
-    if (!courses.length) {
+
+    if (course.length === 0) {
       return res.status(404).json({ error: "Course not found" });
     }
-    res.status(200).json(courses[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message || "Internal server error" });
+
+    return res.status(200).json(course[0]);
+  } catch (error) {
+    console.error("Fetch course error:", error);
+    return res.status(500).json({ error: error.message || "Internal server error" });
   }
 }
 

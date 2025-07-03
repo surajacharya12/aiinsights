@@ -3,15 +3,18 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 Future<List<Map<String, dynamic>>> fetchCourses(String searchQuery) async {
-  final String baseUrl = Platform.isAndroid
+  final baseUrl = Platform.isAndroid
       ? "http://10.0.2.2:3001"
       : "http://localhost:3001";
 
-  final search = searchQuery.trim();
+  final queryParameters = {
+    'courseId': '0',
+    if (searchQuery.trim().isNotEmpty) 'search': searchQuery.trim(),
+  };
+
   final url = Uri.parse(
-    '$baseUrl/course/explore?courseId=0' +
-        (search.isNotEmpty ? '&search=${Uri.encodeComponent(search)}' : ''),
-  );
+    '$baseUrl/course/explore',
+  ).replace(queryParameters: queryParameters);
 
   final response = await http.get(url);
 

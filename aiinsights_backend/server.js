@@ -1,4 +1,3 @@
-// ====== server.js ======
 import 'dotenv/config';
 import express from 'express';
 import helmet from 'helmet';
@@ -8,6 +7,7 @@ import path from 'path';
 import fs from 'fs';
 import { body, validationResult } from 'express-validator';
 import { fileURLToPath } from 'url';
+import bcrypt from 'bcrypt';
 
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
@@ -17,6 +17,7 @@ import { addNewCourse } from './course/AddNewCourse.js';
 import { getCourseById } from './course/GetCourse.js';
 import generateCourseContentRouter from './course/generate-course-content.js';
 import coursesExploreRouter from './course/coursesexplore.js';
+import coursesListRouter from './course/CoursesList.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,9 +39,9 @@ const pg = neon(process.env.DATABASE_URL);
 const db = drizzle(pg);
 
 // Serve uploaded images
-const uploadDir = './uploads';
+const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(uploadDir));
 
 // Multer setup for photo upload
 const storage = multer.diskStorage({
@@ -53,7 +54,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Normalize photo path
+// Normalize photo path helper
 function normalizePhotoPath(photo) {
   if (!photo) return photo;
   return photo.startsWith('/') ? photo : '/' + photo;
@@ -64,9 +65,9 @@ app.get('/', (req, res) => {
   res.send('API is running!');
 });
 
-// ========================== ROUTES ============================
+// -------------------- USER ROUTES ----------------------
 
-// ✅ Register
+// Register
 app.post(
   '/register',
   [
@@ -82,9 +83,12 @@ app.post(
     const { name, email, password, photo } = req.body;
 
     try {
+      // Hash password before saving
+      const hashedPassword = await bcrypt.hash(password, 10);
+
       const insertedUser = await db
         .insert(usersTable)
-        .values({ name, email, password, photo })
+        .values({ name, email, password: hashedPassword, photo })
         .returning();
 
       res.status(201).json({ message: 'User registered successfully', user: insertedUser[0] });
@@ -98,11 +102,14 @@ app.post(
   }
 );
 
-// ✅ Login
+// Login
 app.post(
   '/login',
   [body('email').isEmail(), body('password').isLength({ min: 6 })],
   async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
     const { email, password } = req.body;
 
     try {
@@ -114,7 +121,8 @@ app.post(
       if (users.length === 0) return res.status(404).json({ error: 'User not found' });
 
       const user = users[0];
-      if (password !== user.password) {
+      const match = await bcrypt.compare(password, user.password);
+      if (!match) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
@@ -126,7 +134,7 @@ app.post(
   }
 );
 
-// ✅ Photo upload
+// Photo upload
 app.post('/user/photo-upload', upload.single('photo'), async (req, res) => {
   const userId = parseInt(req.body.id, 10);
 
@@ -155,7 +163,7 @@ app.post('/user/photo-upload', upload.single('photo'), async (req, res) => {
   }
 });
 
-// ✅ Get user
+// Get user by id
 app.get('/user/:id', async (req, res) => {
   const userId = parseInt(req.params.id, 10);
   if (!userId) return res.status(400).json({ error: 'Invalid user ID' });
@@ -175,7 +183,7 @@ app.get('/user/:id', async (req, res) => {
   }
 });
 
-// ✅ Update user
+// Update user
 app.put('/user/:id', async (req, res) => {
   const userId = parseInt(req.params.id, 10);
   if (!userId) return res.status(400).json({ error: 'Invalid user ID' });
@@ -208,7 +216,7 @@ app.put('/user/:id', async (req, res) => {
   }
 });
 
-// ✅ Delete user
+// Delete user
 app.delete('/user/:id', async (req, res) => {
   const userId = parseInt(req.params.id, 10);
   if (!userId) return res.status(400).json({ error: 'Invalid user ID' });
@@ -230,11 +238,14 @@ app.delete('/user/:id', async (req, res) => {
   }
 });
 
-// Course routes
+// -------------------- COURSE ROUTES ----------------------
+
+// Mount imported routers (make sure these are valid router instances)
 app.post('/course/add', addNewCourse);
 app.get('/course/get', getCourseById);
-app.use('/course/generate-course-content', generateCourseContentRouter);
-app.use('/course/explore', coursesExploreRouter); // <-- Make sure this path matches your Dart URL!
+app.post('/course/generate-course-content', generateCourseContentRouter);
+app.use('/course/explore', coursesExploreRouter);
+app.use('/courses', coursesListRouter); // fix: use router, not get()
 
 // Start server
 const PORT = process.env.PORT || 3001;

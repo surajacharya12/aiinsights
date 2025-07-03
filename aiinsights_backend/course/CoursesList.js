@@ -1,35 +1,33 @@
 import express from 'express';
-import { db } from '../config/db.js'; // your DB instance
-import { coursesTable } from '../config/schema.js'; // your schema
-import { and, ne, sql } from 'drizzle-orm';
+import { coursesTable } from '../config/schema.js';
+import { db } from '../config/db.js';
+import { desc, eq, and, ne, sql } from 'drizzle-orm';
 
 const router = express.Router();
-
-router.get('/', async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const courseId = (req.query.courseId || '').trim();
-    const search = (req.query.search || '').toLowerCase();
+    const courseId = req.query.courseId;
+    const search = req.query.search?.toLowerCase();
 
     console.log("Received courseId:", courseId);
     console.log("Received search:", search);
 
-    if (courseId === '0') {
-      // Get all courses where courseContent is not empty
+    if (courseId === "0") {
       let result = await db
         .select()
         .from(coursesTable)
         .where(
           and(
             sql`${coursesTable.courseContent} IS NOT NULL`,
-            ne(coursesTable.courseContent, '')
+            ne(coursesTable.courseContent, ""),
           )
         );
 
       console.log("Initial courses fetched:", result.length);
 
       if (search) {
-        result = result.filter(course =>
-          (course.name?.toLowerCase() || '').includes(search)
+        result = result.filter((course) =>
+          (course.name?.toLowerCase() || "").includes(search)
         );
         console.log("Courses after search filter:", result.length);
       }
@@ -41,17 +39,19 @@ router.get('/', async (req, res) => {
       const result = await db
         .select()
         .from(coursesTable)
-        .where(sql`${coursesTable.cid} = ${courseId}`);
+        .where(eq(coursesTable.cid, courseId));
 
       console.log("Single course fetched:", result.length);
       return res.json(result[0] || {});
     }
 
     return res.json([]);
+
   } catch (error) {
-    console.error('❌ Error fetching courses:', error);
-    return res.status(500).json({ message: 'Server error', details: error.message });
+    console.error("❌ Error fetching courses:", error);
+    return res.status(500).json({ message: "Server error", details: error.message });
   }
 });
+
 
 export default router;

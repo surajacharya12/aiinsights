@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:aiinsights/Views/dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../backend_call/generateCourseContentServices.dart';
@@ -6,347 +9,246 @@ class CourseScreen extends StatefulWidget {
   final Map<String, dynamic> course;
   final bool viewcourse;
 
-  const CourseScreen({
-    Key? key,
-    this.course = const {},
-    this.viewcourse = false,
-  }) : super(key: key);
+  const CourseScreen({Key? key, required this.course, this.viewcourse = false})
+    : super(key: key);
 
   @override
   _CourseScreenState createState() => _CourseScreenState();
 }
 
 class _CourseScreenState extends State<CourseScreen> {
-  Map<String, dynamic>? get courseLayout {
-    if (widget.course['courseJson'] != null &&
-        widget.course['courseJson']['course'] != null) {
-      return widget.course['courseJson']['course'];
-    } else if (widget.course['course'] != null) {
-      return widget.course['course'];
-    } else if (widget.course['chapters'] != null) {
-      return widget.course;
-    } else {
-      return widget.course;
-    }
-  }
-
-  String? get bannerSrcRaw {
-    return courseLayout?['bannerImageBase64'] ??
-        widget.course['bannerImageBase64'] ??
-        widget.course['bannerImageURL'] ??
-        null;
-  }
-
-  String? get bannerSrc {
-    if (bannerSrcRaw == null || bannerSrcRaw is! String) return null;
-
-    if (bannerSrcRaw!.startsWith('http') ||
-        bannerSrcRaw!.startsWith('data:image')) {
-      return bannerSrcRaw;
-    }
-
-    return 'data:image/png;base64,$bannerSrcRaw';
-  }
-
   bool _isGenerating = false;
 
-  Future<void> _onGenerateContent() async {
-    setState(() {
-      _isGenerating = true;
-    });
-    try {
-      // You may want to extract these from the course or prompt user for them
-      final result = await CourseContentServices.generateCourseContent(
-        name: courseLayout?['name'] ?? 'Sample Course',
-        description: courseLayout?['description'] ?? 'Sample Description',
-        category: courseLayout?['category'] ?? 'General',
-        level: courseLayout?['level'] ?? 'Beginner',
-        duration: courseLayout?['duration']?.toString() ?? '1h',
-        includeVideo: true,
-        email: 'test@example.com', // Replace with actual user email if available
-      );
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: Text(result['success'] == true ? 'Success' : 'Error'),
-            content: Text(result['success'] == true
-                ? 'Content generated! Course ID: ${result['courseId'] ?? ''}'
-                : (result['message'] ?? 'Failed to generate content')),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Error'),
-            content: Text('Failed to generate content: $e'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isGenerating = false;
-        });
-      }
+  Map<String, dynamic> get courseLayout {
+    if (widget.course['courseJson'] != null &&
+        widget.course['courseJson']['course'] != null) {
+      return Map<String, dynamic>.from(widget.course['courseJson']['course']);
+    } else {
+      return Map<String, dynamic>.from(widget.course);
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Debug: Always show the raw course map at the top for troubleshooting
-    final debugInfo = widget.course.toString();
-    final courseName =
-        courseLayout?['name'] ??
-        widget.course['name'] ??
-        widget.course['courseJson']?['course']?['name'] ??
-        'No Course Name';
-    final courseDescription =
-        courseLayout?['description'] ??
-        widget.course['description'] ??
-        widget.course['courseJson']?['course']?['description'] ??
-        'No Description';
-    final duration =
-        courseLayout?['duration'] ??
-        widget.course['duration'] ??
-        widget.course['courseJson']?['course']?['duration'] ??
-        'No Duration';
-    final chapters =
-        courseLayout?['noOfChapters'] ??
-        widget.course['noOfChapters'] ??
-        (courseLayout?['chapters']?.length ??
-            widget.course['chapters']?.length ??
-            widget.course['courseJson']?['course']?['chapters']?.length ??
-            'No Chapters');
-    final difficulty =
-        courseLayout?['level'] ??
-        widget.course['level'] ??
-        widget.course['courseJson']?['course']?['level'] ??
-        'No Difficulty';
+  Widget _buildBannerImage() {
+    final base64Image = courseLayout['bannerImageBase64'];
+    final urlImage = widget.course['bannerImageURL'];
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
-          child: Column(
-            children: [
-              // Debug info always at the top
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(8),
-                color: Colors.yellow[100],
-                child: Text(
-                  'DEBUG DATA: $debugInfo',
-                  style: const TextStyle(fontSize: 12, color: Colors.brown),
-                ),
-              ),
-              if (bannerSrc != null)
-                CachedNetworkImage(
-                  imageUrl: bannerSrc!,
-                  placeholder: (context, url) =>
-                      const CircularProgressIndicator(),
-                  errorWidget: (context, url, error) => const Icon(Icons.error),
-                  width: double.infinity,
-                  height: 280,
-                  fit: BoxFit.cover,
-                )
-              else
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text(
-                    'No Banner Image',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
+    if (base64Image != null &&
+        base64Image is String &&
+        base64Image.isNotEmpty) {
+      try {
+        String base64Str = base64Image.trim();
 
-              const SizedBox(height: 24),
+        if (base64Str.startsWith('data:image')) {
+          final commaIndex = base64Str.indexOf(',');
+          if (commaIndex != -1) {
+            base64Str = base64Str.substring(commaIndex + 1);
+          }
+        }
 
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.amber[100],
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title and Description
-                    Text(
-                      courseName,
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.indigo[700],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      courseDescription,
-                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                    ),
+        Uint8List bytes = base64Decode(base64Str);
+        if (bytes.isEmpty) throw Exception('Decoded bytes are empty');
 
-                    const SizedBox(height: 24),
+        return Image.memory(
+          bytes,
+          height: 200,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+        );
+      } catch (_) {
+        return const Icon(Icons.broken_image, size: 200);
+      }
+    } else if (urlImage != null &&
+        urlImage is String &&
+        urlImage.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: urlImage,
+        height: 200,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => const LinearProgressIndicator(),
+        errorWidget: (_, __, ___) => const Icon(Icons.broken_image),
+      );
+    } else {
+      return Container(
+        height: 200,
+        width: double.infinity,
+        color: Colors.grey.shade200,
+        child: const Icon(Icons.image, size: 100, color: Colors.grey),
+      );
+    }
+  }
 
-                    // Info Cards
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 3,
-                      childAspectRatio: 2,
-                      children: [
-                        _buildInfoCard(
-                          icon: Icons.access_time,
-                          iconColor: Colors.indigo,
-                          title: 'Duration',
-                          value: duration.toString(),
-                          backgroundColor: Colors.indigo[50]!,
-                        ),
-                        _buildInfoCard(
-                          icon: Icons.book,
-                          iconColor: Colors.green,
-                          title: 'Chapters',
-                          value: chapters.toString(),
-                          backgroundColor: Colors.green[50]!,
-                        ),
-                        _buildInfoCard(
-                          icon: Icons.bar_chart,
-                          iconColor: Colors.red,
-                          title: 'Difficulty',
-                          value: difficulty.toString(),
-                          backgroundColor: Colors.red[50]!,
-                        ),
-                      ],
-                    ),
+  Future<void> _onGenerateContent() async {
+    setState(() => _isGenerating = true);
+    try {
+      final result = await CourseContentServices.generateCourseContent(
+        name: courseLayout['name'] ?? 'Course',
+        description: courseLayout['description'] ?? '',
+        category: courseLayout['category'] ?? 'General',
+        level: courseLayout['level'] ?? 'Beginner',
+        duration: courseLayout['duration']?.toString() ?? '1h',
+        includeVideo: true,
+        email: 'test@example.com',
+      );
 
-                    const SizedBox(height: 24),
+      if (result['success'] == true) {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Dashboard()),
+        );
+      } else {
+        _showDialog('Error', result['message'] ?? 'Unknown error occurred.');
+      }
+    } catch (e) {
+      _showDialog('Error', 'Failed to generate content: $e');
+    } finally {
+      setState(() => _isGenerating = false);
+    }
+  }
 
-                    // Action Button (removed generate content logic)
-                    Center(
-                      child: widget.viewcourse
-                          ? ElevatedButton.icon(
-                              onPressed: () {
-                                // Navigate to course page if needed
-                                // Navigator.pushNamed(context, '/course/${widget.course['cid']}');
-                              },
-                              icon: const Icon(Icons.play_circle),
-                              label: const Text('Continue Learning'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue[600],
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            )
-                          : Column(
-                              children: [
-                                ElevatedButton.icon(
-                                  onPressed: _isGenerating ? null : _onGenerateContent,
-                                  icon: const Icon(Icons.auto_fix_high),
-                                  label: _isGenerating
-                                      ? const SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
-                                        )
-                                      : const Text('Generate Content'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.deepPurple[400],
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+  void _showDialog(String title, String content) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).dialogBackgroundColor,
+        title: Text(
+          title,
+          style: TextStyle(
+            color: Theme.of(context).textTheme.titleLarge?.color,
           ),
         ),
+        content: Text(
+          content,
+          style: TextStyle(
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              'OK',
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildInfoCard({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String value,
-    required Color backgroundColor,
-  }) {
-    return Container(
-      margin: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 3,
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: iconColor, size: 32),
-          const SizedBox(width: 12),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final iconColor = isDark ? theme.colorScheme.onSurface : Colors.black87;
+
+    final courseName = courseLayout['name'] ?? 'No Course Name';
+    final courseDesc = courseLayout['description'] ?? 'No Description';
+    final duration = courseLayout['duration']?.toString() ?? 'No Duration';
+    final chapters =
+        courseLayout['noOfChapters']?.toString() ??
+        widget.course['noOfChapters']?.toString() ??
+        'No Chapters';
+    final difficulty = courseLayout['level'] ?? 'No Difficulty';
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        elevation: 5,
+        color: theme.cardColor,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: _buildBannerImage(),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Icon(Icons.book, color: iconColor, size: 28),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      courseName,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.textTheme.headlineSmall?.color,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               Text(
-                title.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: iconColor.withOpacity(0.8),
+                courseDesc,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.textTheme.bodyMedium?.color,
                 ),
               ),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+              const SizedBox(height: 12),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    Icon(Icons.access_time, color: iconColor, size: 20),
+                    const SizedBox(width: 6),
+                    Text(duration, style: TextStyle(color: iconColor)),
+                    const SizedBox(width: 20),
+                    Icon(Icons.list_alt, color: iconColor, size: 20),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$chapters Chapters',
+                      style: TextStyle(color: iconColor),
+                    ),
+                    const SizedBox(width: 20),
+                    Icon(Icons.signal_cellular_alt, color: iconColor, size: 20),
+                    const SizedBox(width: 6),
+                    Text(difficulty, style: TextStyle(color: iconColor)),
+                  ],
                 ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark ? Colors.green[600] : Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 24,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: _isGenerating
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.auto_mode),
+                label: Text(
+                  _isGenerating ? 'Generating Content...' : 'Generate Content',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                onPressed: _isGenerating ? null : _onGenerateContent,
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
