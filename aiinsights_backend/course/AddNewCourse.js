@@ -27,7 +27,7 @@ const PROMPT = `Generate a Learning Course based on the following details. The r
 async function GenerateImageWithGemini(prompt) {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash-preview-image-generation",
+    model: "gemini-3-pro-image-preview",
     contents: prompt,
     config: {
       responseModalities: [Modality.IMAGE, Modality.TEXT],
@@ -46,24 +46,26 @@ async function addNewCourse(req, res) {
     let { courseId, ...formData } = req.body;
     const email = req.user?.email || formData.email;
     if (!email) {
-      return res.status(401).json({ error: "Unauthorized: user not logged in" });
+      return res
+        .status(401)
+        .json({ error: "Unauthorized: user not logged in" });
     }
     if (!courseId) courseId = crypto.randomUUID();
 
     // 1. Generate course structure using Gemini
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.0-flash",
       contents: [
         {
           role: "user",
           parts: [
             {
-              text: `${PROMPT}\n${JSON.stringify(formData)}`
-            }
-          ]
-        }
-      ]
+              text: `${PROMPT}\n${JSON.stringify(formData)}`,
+            },
+          ],
+        },
+      ],
     });
     const generatedText = response.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!generatedText) {
@@ -74,7 +76,8 @@ async function addNewCourse(req, res) {
     const extractJSON = (text) => {
       const first = text.indexOf("{");
       const last = text.lastIndexOf("}");
-      if (first === -1 || last === -1) throw new Error("Invalid JSON in AI output");
+      if (first === -1 || last === -1)
+        throw new Error("Invalid JSON in AI output");
       return text.substring(first, last + 1);
     };
     const jsonString = extractJSON(generatedText);
@@ -90,21 +93,21 @@ async function addNewCourse(req, res) {
     await db.insert(coursesTable).values({
       cid: courseId,
       userEmail: email,
-      name: course.name,
-      description: course.description,
-      category: course.category,
-      level: course.level,
-      includeVideo: course.includeVideo,
+      name: formData.name,
+      description: formData.description,
+      category: formData.category,
+      level: formData.level,
+      includeVideo: formData.includeVideo,
       noOfChapters,
-      courseJson: parsedCourse, // Store as object (json column)
-      bannerImageURL: `data:image/png;base64,${bannerImageBase64}`,
-      courseContent: null,
+      courseJson: jsonString,
+      bannerImageURL: `data:image/png;base64,${bannerImageBase64}`, // inline base64 image
     });
-
     return res.status(200).json({ courseId });
   } catch (error) {
     console.error("API error:", error);
-    return res.status(500).json({ error: error.message || "Internal server error" });
+    return res
+      .status(500)
+      .json({ error: error.message || "Internal server error" });
   }
 }
 

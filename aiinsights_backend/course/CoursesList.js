@@ -1,57 +1,31 @@
 import express from 'express';
 import { coursesTable } from '../config/schema.js';
-import { db } from '../config/db.js';
-import { desc, eq, and, ne, sql } from 'drizzle-orm';
+import { db } from '../config/db.js'; // or directly import db if you're exporting it from main
+import { eq, desc } from 'drizzle-orm';
+import { authenticateToken } from '../auth.js'; // import the auth middleware
 
 const router = express.Router();
-router.get("/", async (req, res) => {
+
+// ✅ Protected route - fetch courses of the logged-in user
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    const courseId = req.query.courseId;
-    const search = req.query.search?.toLowerCase();
+    const userEmail = req.user?.email;
 
-    console.log("Received courseId:", courseId);
-    console.log("Received search:", search);
-
-    if (courseId === "0") {
-      let result = await db
-        .select()
-        .from(coursesTable)
-        .where(
-          and(
-            sql`${coursesTable.courseContent} IS NOT NULL`,
-            ne(coursesTable.courseContent, ""),
-          )
-        );
-
-      console.log("Initial courses fetched:", result.length);
-
-      if (search) {
-        result = result.filter((course) =>
-          (course.name?.toLowerCase() || "").includes(search)
-        );
-        console.log("Courses after search filter:", result.length);
-      }
-
-      return res.json(result);
+    if (!userEmail) {
+      return res.status(401).json({ message: 'Unauthorized: User not logged in' });
     }
 
-    if (courseId) {
-      const result = await db
-        .select()
-        .from(coursesTable)
-        .where(eq(coursesTable.cid, courseId));
+    const result = await db
+      .select()
+      .from(coursesTable)
+      .where(eq(coursesTable.userEmail, userEmail))
+      .orderBy(desc(coursesTable.id));
 
-      console.log("Single course fetched:", result.length);
-      return res.json(result[0] || {});
-    }
-
-    return res.json([]);
-
+    return res.status(200).json(result);
   } catch (error) {
-    console.error("❌ Error fetching courses:", error);
-    return res.status(500).json({ message: "Server error", details: error.message });
+    console.error('❌ Error fetching user courses:', error);
+    return res.status(500).json({ message: 'Server error', details: error.message });
   }
 });
-
 
 export default router;

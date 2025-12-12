@@ -3,7 +3,8 @@ import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
   schema: './config/schema.js',
-  dialect: 'postgresql',
+  out: './drizzle',          // folder to save migrations
+   dialect: 'postgresql',
   dbCredentials: {
     url: process.env.DATABASE_URL,
   },

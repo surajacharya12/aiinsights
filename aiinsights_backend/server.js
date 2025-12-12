@@ -1,23 +1,24 @@
-import 'dotenv/config';
-import express from 'express';
-import helmet from 'helmet';
-import bodyParser from 'body-parser';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { body, validationResult } from 'express-validator';
-import { fileURLToPath } from 'url';
-import bcrypt from 'bcrypt';
+import "dotenv/config";
+import express from "express";
+import helmet from "helmet";
+import bodyParser from "body-parser";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { body, validationResult } from "express-validator";
+import { fileURLToPath } from "url";
+import bcrypt from "bcrypt";
 
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-import { sql, eq } from 'drizzle-orm';
-import { usersTable } from './config/schema.js';
-import { addNewCourse } from './course/AddNewCourse.js';
-import { getCourseById } from './course/GetCourse.js';
-import generateCourseContentRouter from './course/generate-course-content.js';
-import coursesExploreRouter from './course/coursesexplore.js';
-import coursesListRouter from './course/CoursesList.js';
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import { sql, eq } from "drizzle-orm";
+import { usersTable } from "./config/schema.js";
+import { addNewCourse } from "./course/AddNewCourse.js";
+import { getCourseById } from "./course/GetCourse.js";
+import generateCourseContentRouter from "./course/generate-course-content.js";
+import coursesExploreRouter from "./course/coursesexplore.js";
+import coursesListRouter from "./course/CoursesList.js";
+import chatpdfRouter from "./pdf/chatpdf.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,9 +40,9 @@ const pg = neon(process.env.DATABASE_URL);
 const db = drizzle(pg);
 
 // Serve uploaded images
-const uploadDir = path.join(__dirname, 'uploads');
+const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-app.use('/uploads', express.static(uploadDir));
+app.use("/uploads", express.static(uploadDir));
 
 // Multer setup for photo upload
 const storage = multer.diskStorage({
@@ -57,28 +58,29 @@ const upload = multer({ storage });
 // Normalize photo path helper
 function normalizePhotoPath(photo) {
   if (!photo) return photo;
-  return photo.startsWith('/') ? photo : '/' + photo;
+  return photo.startsWith("/") ? photo : "/" + photo;
 }
 
 // Root
-app.get('/', (req, res) => {
-  res.send('API is running!');
+app.get("/", (req, res) => {
+  res.send("API is running!");
 });
 
 // -------------------- USER ROUTES ----------------------
 
 // Register
 app.post(
-  '/register',
+  "/register",
   [
-    body('name').isString().notEmpty(),
-    body('email').isEmail(),
-    body('password').isLength({ min: 6 }),
-    body('photo').optional().isURL(),
+    body("name").isString().notEmpty(),
+    body("email").isEmail(),
+    body("password").isLength({ min: 6 }),
+    body("photo").optional().isURL(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
 
     const { name, email, password, photo } = req.body;
 
@@ -91,24 +93,28 @@ app.post(
         .values({ name, email, password: hashedPassword, photo })
         .returning();
 
-      res.status(201).json({ message: 'User registered successfully', user: insertedUser[0] });
+      res.status(201).json({
+        message: "User registered successfully",
+        user: insertedUser[0],
+      });
     } catch (error) {
-      console.error('Registration error:', error);
-      if (error.code === '23505') {
-        return res.status(409).json({ error: 'Email already exists' });
+      console.error("Registration error:", error);
+      if (error.code === "23505") {
+        return res.status(409).json({ error: "Email already exists" });
       }
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ error: "Internal server error" });
     }
   }
 );
 
 // Login
 app.post(
-  '/login',
-  [body('email').isEmail(), body('password').isLength({ min: 6 })],
+  "/login",
+  [body("email").isEmail(), body("password").isLength({ min: 6 })],
   async (req, res) => {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
 
     const { email, password } = req.body;
 
@@ -118,28 +124,29 @@ app.post(
         .from(usersTable)
         .where(sql`${usersTable.email} = ${email}`);
 
-      if (users.length === 0) return res.status(404).json({ error: 'User not found' });
+      if (users.length === 0)
+        return res.status(404).json({ error: "User not found" });
 
       const user = users[0];
       const match = await bcrypt.compare(password, user.password);
       if (!match) {
-        return res.status(401).json({ error: 'Invalid credentials' });
+        return res.status(401).json({ error: "Invalid credentials" });
       }
 
-      res.status(200).json({ message: 'Login successful', user });
+      res.status(200).json({ message: "Login successful", user });
     } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      console.error("Login error:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   }
 );
 
 // Photo upload
-app.post('/user/photo-upload', upload.single('photo'), async (req, res) => {
+app.post("/user/photo-upload", upload.single("photo"), async (req, res) => {
   const userId = parseInt(req.body.id, 10);
 
   if (!req.file || !userId) {
-    return res.status(400).json({ error: 'Missing user ID or file' });
+    return res.status(400).json({ error: "Missing user ID or file" });
   }
 
   try {
@@ -153,20 +160,23 @@ app.post('/user/photo-upload', upload.single('photo'), async (req, res) => {
       .returning();
 
     if (result.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json({ message: 'Photo uploaded and updated successfully', user: result[0] });
+    res.status(200).json({
+      message: "Photo uploaded and updated successfully",
+      user: result[0],
+    });
   } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ error: 'Server error during upload' });
+    console.error("Upload error:", error);
+    res.status(500).json({ error: "Server error during upload" });
   }
 });
 
 // Get user by id
-app.get('/user/:id', async (req, res) => {
+app.get("/user/:id", async (req, res) => {
   const userId = parseInt(req.params.id, 10);
-  if (!userId) return res.status(400).json({ error: 'Invalid user ID' });
+  if (!userId) return res.status(400).json({ error: "Invalid user ID" });
 
   try {
     const users = await db
@@ -174,19 +184,20 @@ app.get('/user/:id', async (req, res) => {
       .from(usersTable)
       .where(eq(usersTable.id, userId));
 
-    if (users.length === 0) return res.status(404).json({ error: 'User not found' });
+    if (users.length === 0)
+      return res.status(404).json({ error: "User not found" });
 
     res.status(200).json(users[0]);
   } catch (error) {
-    console.error('Fetch user error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Fetch user error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // Update user
-app.put('/user/:id', async (req, res) => {
+app.put("/user/:id", async (req, res) => {
   const userId = parseInt(req.params.id, 10);
-  if (!userId) return res.status(400).json({ error: 'Invalid user ID' });
+  if (!userId) return res.status(400).json({ error: "Invalid user ID" });
 
   const { name, email, photo } = req.body;
   const updateFields = {};
@@ -195,7 +206,7 @@ app.put('/user/:id', async (req, res) => {
   if (photo) updateFields.photo = photo;
 
   if (Object.keys(updateFields).length === 0) {
-    return res.status(400).json({ error: 'No fields to update' });
+    return res.status(400).json({ error: "No fields to update" });
   }
 
   try {
@@ -206,20 +217,20 @@ app.put('/user/:id', async (req, res) => {
       .returning();
 
     if (result.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     res.status(200).json(result[0]);
   } catch (error) {
-    console.error('Update user error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Update user error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // Delete user
-app.delete('/user/:id', async (req, res) => {
+app.delete("/user/:id", async (req, res) => {
   const userId = parseInt(req.params.id, 10);
-  if (!userId) return res.status(400).json({ error: 'Invalid user ID' });
+  if (!userId) return res.status(400).json({ error: "Invalid user ID" });
 
   try {
     const result = await db
@@ -228,24 +239,25 @@ app.delete('/user/:id', async (req, res) => {
       .returning();
 
     if (result.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json({ message: 'Account deleted successfully' });
+    res.status(200).json({ message: "Account deleted successfully" });
   } catch (error) {
-    console.error('Delete user error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Delete user error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // -------------------- COURSE ROUTES ----------------------
 
 // Mount imported routers (make sure these are valid router instances)
-app.post('/course/add', addNewCourse);
-app.get('/course/get', getCourseById);
-app.post('/course/generate-course-content', generateCourseContentRouter);
-app.use('/course/explore', coursesExploreRouter);
-app.use('/courses', coursesListRouter); // fix: use router, not get()
+app.post("/course/add", addNewCourse);
+app.get("/course/get", getCourseById);
+app.post("/course/generate-course-content", generateCourseContentRouter);
+app.use("/course/explore", coursesExploreRouter);
+app.use("/courses", coursesListRouter); // fix: use router, not get()
+app.use("/chatpdf", chatpdfRouter);
 
 // Start server
 const PORT = process.env.PORT || 3001;

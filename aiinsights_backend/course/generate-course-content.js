@@ -1,7 +1,7 @@
 import express from "express";
 import axios from "axios";
 import { db } from "../config/db.js";
-import { coursesTable } from "../config/schema.js";
+import { coursesTable, usersTable } from "../config/schema.js";
 import { eq } from "drizzle-orm";
 import dotenv from "dotenv";
 dotenv.config();
@@ -10,7 +10,7 @@ const router = express.Router();
 
 const YOUTUBE_BASE_URL = "https://www.googleapis.com/youtube/v3/search";
 
-// Fetch 4 YouTube videos for a topic
+// Helper: Fetch 4 YouTube videos for a topic
 const GetYoutubeVideo = async (query) => {
   if (!query) return [];
   try {
@@ -33,14 +33,48 @@ const GetYoutubeVideo = async (query) => {
   }
 };
 
-// Replace this with your AI model integration (e.g., Google Gemini or OpenAI)
+// Replace with your actual AI model integration
 async function generateAIContent(prompt, chapter) {
-  // Dummy implementation — replace with real API call to AI
   throw new Error("AI content generation function not implemented");
 }
 
-// POST: Generate and save course content
-router.post("/", async (req, res) => {
+// POST: Add a new course (with userEmail)
+router.post("/add", async (req, res) => {
+  try {
+    const { courseId, courseTitle, userEmail } = req.body;
+
+    if (!courseId || !courseTitle || !userEmail) {
+      return res.status(400).json({ error: "Missing courseId, courseTitle or userEmail" });
+    }
+
+    // Check if user exists
+    const userExists = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, userEmail))
+      .limit(1);
+
+    if (!userExists.length) {
+      return res.status(400).json({ error: `User with email ${userEmail} does not exist.` });
+    }
+
+    // Insert new course
+    const insertResult = await db.insert(coursesTable).values({
+      cid: courseId,
+      courseName: courseTitle,
+      userEmail: userEmail,
+      courseContent: [], // Empty content initially
+    });
+
+    return res.json({ message: "Course added successfully", insertResult });
+  } catch (e) {
+    console.error("Error in POST /add:", e);
+    return res.status(500).json({ error: "Failed to add course", details: e.message });
+  }
+});
+
+// POST: Generate and update course content
+router.post("/generate-content", async (req, res) => {
   const PROMPT = `You are an AI that generates strictly valid JSON educational content.
 
 Given a chapter name and its topics, generate json-formatted content for each topic. Embed a JSON structure.
@@ -86,7 +120,7 @@ Now here is the chapter data:
               try {
                 topic.content = JSON.parse(topic.content);
               } catch {
-                // Leave it as string if not parseable
+                // leave as string if not parseable
               }
             }
           }
@@ -111,6 +145,7 @@ Now here is the chapter data:
 
     const CourseContent = await Promise.all(promises);
 
+    // Update courseContent field of the course with courseId
     const dbResp = await db
       .update(coursesTable)
       .set({ courseContent: CourseContent })
@@ -122,7 +157,7 @@ Now here is the chapter data:
       dbResp,
     });
   } catch (e) {
-    console.error("❌ Fatal error in POST /generate-course-content:", e);
+    console.error("❌ Fatal error in POST /generate-content:", e);
     return res.status(500).json({ error: "Failed to process request", details: e.message });
   }
 });
@@ -153,7 +188,7 @@ router.get("/", async (req, res) => {
       CourseContent: course.courseContent,
     });
   } catch (error) {
-    console.error("❌ Error in GET /generate-course-content:", error);
+    console.error("❌ Error in GET /:", error);
     return res.status(500).json({ error: "Failed to fetch course content", details: error.message });
   }
 });
